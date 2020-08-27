@@ -5341,7 +5341,7 @@ var $elm$random$Random$generate = F2(
 var $author$project$Main$Close = {$: 'Close'};
 var $author$project$Main$Empty = {$: 'Empty'};
 var $author$project$Main$getField = function (index) {
-	return {adjacentMines: 0, content: $author$project$Main$Empty, status: $author$project$Main$Close};
+	return {content: $author$project$Main$Empty, status: $author$project$Main$Close};
 };
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Basics$negate = function (n) {
@@ -5418,7 +5418,7 @@ var $author$project$Main$init = function (_v0) {
 			return $author$project$Main$getField(index);
 		});
 	return _Utils_Tuple2(
-		fields,
+		{fields: fields},
 		$elm$core$Platform$Cmd$batch(
 			A2(
 				$elm$core$List$repeat,
@@ -5428,7 +5428,7 @@ var $author$project$Main$init = function (_v0) {
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$subscriptions = function (_v0) {
+var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$none;
 };
 var $author$project$Main$Mine = {$: 'Mine'};
@@ -5515,26 +5515,133 @@ var $elm$core$Array$set = F3(
 			A4($elm$core$Array$setHelp, startShift, index, value, tree),
 			tail));
 	});
-var $author$project$Main$addAdjacentMines = F2(
-	function (index, model) {
-		var _v0 = A2($elm$core$Array$get, index, model);
+var $author$project$Main$doCloseField = F2(
+	function (index, fields) {
+		var _v0 = A2($elm$core$Array$get, index, fields);
 		if (_v0.$ === 'Nothing') {
-			return model;
+			return fields;
 		} else {
 			var field = _v0.a;
-			var _v1 = field.content;
-			if (_v1.$ === 'Empty') {
-				return A3(
-					$elm$core$Array$set,
-					index,
-					_Utils_update(
-						field,
-						{adjacentMines: field.adjacentMines + 1}),
-					model);
+			return A3(
+				$elm$core$Array$set,
+				index,
+				_Utils_update(
+					field,
+					{status: $author$project$Main$Close}),
+				fields);
+		}
+	});
+var $author$project$Main$Flag = {$: 'Flag'};
+var $author$project$Main$doFlagField = F2(
+	function (index, fields) {
+		var _v0 = A2($elm$core$Array$get, index, fields);
+		if (_v0.$ === 'Nothing') {
+			return fields;
+		} else {
+			var field = _v0.a;
+			return A3(
+				$elm$core$Array$set,
+				index,
+				_Utils_update(
+					field,
+					{status: $author$project$Main$Flag}),
+				fields);
+		}
+	});
+var $author$project$Main$Open = {$: 'Open'};
+var $author$project$Main$doOpenField = F2(
+	function (index, fields) {
+		var _v0 = A2($elm$core$Array$get, index, fields);
+		if (_v0.$ === 'Nothing') {
+			return fields;
+		} else {
+			var field = _v0.a;
+			return A3(
+				$elm$core$Array$set,
+				index,
+				_Utils_update(
+					field,
+					{status: $author$project$Main$Open}),
+				fields);
+		}
+	});
+var $author$project$Main$fieldIsClosed = function (_v0) {
+	var status = _v0.status;
+	if (status.$ === 'Close') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Array$fromListHelp = F3(
+	function (list, nodeList, nodeListSize) {
+		fromListHelp:
+		while (true) {
+			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
+			var jsArray = _v0.a;
+			var remainingItems = _v0.b;
+			if (_Utils_cmp(
+				$elm$core$Elm$JsArray$length(jsArray),
+				$elm$core$Array$branchFactor) < 0) {
+				return A2(
+					$elm$core$Array$builderToArray,
+					true,
+					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
 			} else {
-				return model;
+				var $temp$list = remainingItems,
+					$temp$nodeList = A2(
+					$elm$core$List$cons,
+					$elm$core$Array$Leaf(jsArray),
+					nodeList),
+					$temp$nodeListSize = nodeListSize + 1;
+				list = $temp$list;
+				nodeList = $temp$nodeList;
+				nodeListSize = $temp$nodeListSize;
+				continue fromListHelp;
 			}
 		}
+	});
+var $elm$core$Array$fromList = function (list) {
+	if (!list.b) {
+		return $elm$core$Array$empty;
+	} else {
+		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
+	}
+};
+var $elm$core$Array$filter = F2(
+	function (isGood, array) {
+		return $elm$core$Array$fromList(
+			A3(
+				$elm$core$Array$foldr,
+				F2(
+					function (x, xs) {
+						return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+					}),
+				_List_Nil,
+				array));
+	});
+var $author$project$Main$filterField = F2(
+	function (fieldFilter, _v0) {
+		var field = _v0.b;
+		return fieldFilter(field);
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
 	});
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Array$foldl = F3(
@@ -5664,19 +5771,136 @@ var $author$project$Main$getAdjacent = function (index) {
 							(($author$project$Main$getRow(index) > 0) ? $elm$core$Array$push(index - $author$project$Main$xSize) : $elm$core$Basics$identity)(
 								((($author$project$Main$getRow(index) > 0) && ($author$project$Main$getColumn(index) > 0)) ? $elm$core$Array$push((index - $author$project$Main$xSize) - 1) : $elm$core$Basics$identity)($elm$core$Array$empty))))))));
 };
+var $author$project$Main$getIndex = function (_v0) {
+	var index = _v0.a;
+	return index;
+};
+var $author$project$Main$getIndexField = F2(
+	function (fields, index) {
+		var _v0 = A2($elm$core$Array$get, index, fields);
+		if (_v0.$ === 'Nothing') {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var field = _v0.a;
+			return $elm$core$Maybe$Just(
+				_Utils_Tuple2(index, field));
+		}
+	});
+var $elm$core$Elm$JsArray$map = _JsArray_map;
+var $elm$core$Array$map = F2(
+	function (func, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = function (node) {
+			if (node.$ === 'SubTree') {
+				var subTree = node.a;
+				return $elm$core$Array$SubTree(
+					A2($elm$core$Elm$JsArray$map, helper, subTree));
+			} else {
+				var values = node.a;
+				return $elm$core$Array$Leaf(
+					A2($elm$core$Elm$JsArray$map, func, values));
+			}
+		};
+		return A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A2($elm$core$Elm$JsArray$map, helper, tree),
+			A2($elm$core$Elm$JsArray$map, func, tail));
+	});
+var $author$project$Main$doOpenAdjacents = F2(
+	function (index, fields) {
+		return A3(
+			$elm$core$Array$foldl,
+			$author$project$Main$doOpenField,
+			fields,
+			A2(
+				$elm$core$Array$map,
+				$author$project$Main$getIndex,
+				A2(
+					$elm$core$Array$filter,
+					$author$project$Main$filterField($author$project$Main$fieldIsClosed),
+					$elm$core$Array$fromList(
+						A2(
+							$elm$core$List$filterMap,
+							$author$project$Main$getIndexField(fields),
+							$elm$core$Array$toList(
+								$author$project$Main$getAdjacent(index)))))));
+	});
 var $author$project$Main$doAdjacent = F3(
-	function (index, modelFunction, model) {
+	function (index, modelFunction, fields) {
 		return A3(
 			$elm$core$Array$foldl,
 			modelFunction,
-			model,
+			fields,
 			$author$project$Main$getAdjacent(index));
 	});
-var $author$project$Main$doCloseField = F2(
-	function (index, model) {
-		var _v0 = A2($elm$core$Array$get, index, model);
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $author$project$Main$filterCountAdjacent = F3(
+	function (index, fieldFilter, fields) {
+		return $elm$core$List$length(
+			A2(
+				$elm$core$List$filter,
+				fieldFilter,
+				A2(
+					$elm$core$List$filterMap,
+					function (index1) {
+						return A2($elm$core$Array$get, index1, fields);
+					},
+					$elm$core$Array$toList(
+						$author$project$Main$getAdjacent(index)))));
+	});
+var $author$project$Main$doOpenFieldAndAdjacents = F2(
+	function (index, fields) {
+		var _v0 = A2($elm$core$Array$get, index, fields);
 		if (_v0.$ === 'Nothing') {
-			return model;
+			return fields;
+		} else {
+			var field = _v0.a;
+			var _v1 = _Utils_Tuple2(field.status, field.content);
+			if (_v1.a.$ === 'Close') {
+				if (_v1.b.$ === 'Empty') {
+					var _v2 = _v1.a;
+					var _v3 = _v1.b;
+					var adjacentMines = A3(
+						$author$project$Main$filterCountAdjacent,
+						index,
+						function (field1) {
+							return _Utils_eq(field1.content, $author$project$Main$Mine);
+						},
+						fields);
+					return (!adjacentMines) ? A3(
+						$author$project$Main$doAdjacent,
+						index,
+						$author$project$Main$doOpenFieldAndAdjacents,
+						A2($author$project$Main$doOpenField, index, fields)) : A2($author$project$Main$doOpenField, index, fields);
+				} else {
+					var _v4 = _v1.a;
+					return A2($author$project$Main$doOpenField, index, fields);
+				}
+			} else {
+				return fields;
+			}
+		}
+	});
+var $author$project$Main$doUnFlagField = F2(
+	function (index, fields) {
+		var _v0 = A2($elm$core$Array$get, index, fields);
+		if (_v0.$ === 'Nothing') {
+			return fields;
 		} else {
 			var field = _v0.a;
 			return A3(
@@ -5685,147 +5909,104 @@ var $author$project$Main$doCloseField = F2(
 				_Utils_update(
 					field,
 					{status: $author$project$Main$Close}),
-				model);
-		}
-	});
-var $author$project$Main$doClose = F2(
-	function (index, model) {
-		var _v0 = A2($elm$core$Array$get, index, model);
-		if (_v0.$ === 'Nothing') {
-			return model;
-		} else {
-			var field = _v0.a;
-			var _v1 = field.status;
-			switch (_v1.$) {
-				case 'Open':
-					return A2($author$project$Main$doCloseField, index, model);
-				case 'Flag':
-					return A2($author$project$Main$doCloseField, index, model);
-				default:
-					return model;
-			}
-		}
-	});
-var $author$project$Main$Flag = {$: 'Flag'};
-var $author$project$Main$doFlagField = F2(
-	function (index, model) {
-		var _v0 = A2($elm$core$Array$get, index, model);
-		if (_v0.$ === 'Nothing') {
-			return model;
-		} else {
-			var field = _v0.a;
-			return A3(
-				$elm$core$Array$set,
-				index,
-				_Utils_update(
-					field,
-					{status: $author$project$Main$Flag}),
-				model);
-		}
-	});
-var $author$project$Main$doFlag = F2(
-	function (index, model) {
-		var _v0 = A2($elm$core$Array$get, index, model);
-		if (_v0.$ === 'Nothing') {
-			return model;
-		} else {
-			var field = _v0.a;
-			var _v1 = field.status;
-			if (_v1.$ === 'Close') {
-				return A2($author$project$Main$doFlagField, index, model);
-			} else {
-				return model;
-			}
-		}
-	});
-var $author$project$Main$Open = {$: 'Open'};
-var $author$project$Main$doOpenField = F2(
-	function (index, model) {
-		var _v0 = A2($elm$core$Array$get, index, model);
-		if (_v0.$ === 'Nothing') {
-			return model;
-		} else {
-			var field = _v0.a;
-			return A3(
-				$elm$core$Array$set,
-				index,
-				_Utils_update(
-					field,
-					{status: $author$project$Main$Open}),
-				model);
-		}
-	});
-var $author$project$Main$doOpen = F2(
-	function (index, model) {
-		var _v0 = A2($elm$core$Array$get, index, model);
-		if (_v0.$ === 'Nothing') {
-			return model;
-		} else {
-			var field = _v0.a;
-			var _v1 = _Utils_Tuple3(field.status, field.content, field.adjacentMines);
-			if (_v1.a.$ === 'Close') {
-				if ((_v1.b.$ === 'Empty') && (!_v1.c)) {
-					var _v2 = _v1.a;
-					var _v3 = _v1.b;
-					return A3(
-						$author$project$Main$doAdjacent,
-						index,
-						$author$project$Main$doOpen,
-						A2($author$project$Main$doOpenField, index, model));
-				} else {
-					var _v4 = _v1.a;
-					return A2($author$project$Main$doOpenField, index, model);
-				}
-			} else {
-				return model;
-			}
+				fields);
 		}
 	});
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Main$setFields = F2(
+	function (model, fields) {
+		return _Utils_update(
+			model,
+			{fields: fields});
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
+		var _v0 = model;
+		var fields = _v0.fields;
 		switch (msg.$) {
-			case 'Opened':
+			case 'OpenField':
 				var index = msg.a;
-				var _v1 = A2($elm$core$Array$get, index, model);
-				if (_v1.$ === 'Nothing') {
+				var _v2 = A2($elm$core$Array$get, index, fields);
+				if (_v2.$ === 'Nothing') {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				} else {
-					var field = _v1.a;
-					var _v2 = field.status;
-					switch (_v2.$) {
-						case 'Close':
-							return _Utils_Tuple2(
-								A2($author$project$Main$doOpen, index, model),
-								$elm$core$Platform$Cmd$none);
-						case 'Open':
-							return _Utils_Tuple2(
-								A2($author$project$Main$doClose, index, model),
-								$elm$core$Platform$Cmd$none);
-						default:
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-					}
+					var field = _v2.a;
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$setFields,
+							model,
+							A2($author$project$Main$doOpenField, index, fields)),
+						$elm$core$Platform$Cmd$none);
 				}
-			case 'Flagged':
+			case 'CloseField':
 				var index = msg.a;
-				var _v3 = A2($elm$core$Array$get, index, model);
+				var _v3 = A2($elm$core$Array$get, index, fields);
 				if (_v3.$ === 'Nothing') {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				} else {
 					var field = _v3.a;
-					var _v4 = field.status;
-					switch (_v4.$) {
-						case 'Close':
-							return _Utils_Tuple2(
-								A2($author$project$Main$doFlag, index, model),
-								$elm$core$Platform$Cmd$none);
-						case 'Flag':
-							return _Utils_Tuple2(
-								A2($author$project$Main$doClose, index, model),
-								$elm$core$Platform$Cmd$none);
-						default:
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-					}
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$setFields,
+							model,
+							A2($author$project$Main$doCloseField, index, fields)),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'FlagField':
+				var index = msg.a;
+				var _v4 = A2($elm$core$Array$get, index, fields);
+				if (_v4.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var field = _v4.a;
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$setFields,
+							model,
+							A2($author$project$Main$doFlagField, index, fields)),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'UnFlagField':
+				var index = msg.a;
+				var _v5 = A2($elm$core$Array$get, index, fields);
+				if (_v5.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var field = _v5.a;
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$setFields,
+							model,
+							A2($author$project$Main$doUnFlagField, index, fields)),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'OpenFieldAndAdjacents':
+				var index = msg.a;
+				var _v6 = A2($elm$core$Array$get, index, fields);
+				if (_v6.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var field = _v6.a;
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$setFields,
+							model,
+							A2($author$project$Main$doOpenFieldAndAdjacents, index, fields)),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'OpenAdjacents':
+				var index = msg.a;
+				var _v7 = A2($elm$core$Array$get, index, fields);
+				if (_v7.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var field = _v7.a;
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$setFields,
+							model,
+							A2($author$project$Main$doOpenAdjacents, index, fields)),
+						$elm$core$Platform$Cmd$none);
 				}
 			case 'PickRandomIndex':
 				return _Utils_Tuple2(
@@ -5833,27 +6014,27 @@ var $author$project$Main$update = F2(
 					A2($elm$random$Random$generate, $author$project$Main$SetRandomMine, $author$project$Main$minesGenerator));
 			default:
 				var index = msg.a;
-				var _v5 = A2($elm$core$Array$get, index, model);
-				if (_v5.$ === 'Nothing') {
+				var _v8 = A2($elm$core$Array$get, index, fields);
+				if (_v8.$ === 'Nothing') {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				} else {
-					var field = _v5.a;
-					var _v6 = field.content;
-					if (_v6.$ === 'Mine') {
+					var field = _v8.a;
+					var _v9 = field.content;
+					if (_v9.$ === 'Mine') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
 						return _Utils_Tuple2(
-							A3(
-								$author$project$Main$doAdjacent,
-								index,
-								$author$project$Main$addAdjacentMines,
-								A3(
-									$elm$core$Array$set,
-									index,
-									_Utils_update(
-										field,
-										{content: $author$project$Main$Mine}),
-									model)),
+							_Utils_update(
+								model,
+								{
+									fields: A3(
+										$elm$core$Array$set,
+										index,
+										_Utils_update(
+											field,
+											{content: $author$project$Main$Mine}),
+										model.fields)
+								}),
 							$elm$core$Platform$Cmd$none);
 					}
 				}
@@ -5862,109 +6043,253 @@ var $author$project$Main$update = F2(
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $author$project$Main$Flagged = function (a) {
-	return {$: 'Flagged', a: a};
-};
-var $author$project$Main$Opened = function (a) {
-	return {$: 'Opened', a: a};
-};
+var $author$project$Main$FlagField = F2(
+	function (a, b) {
+		return {$: 'FlagField', a: a, b: b};
+	});
+var $author$project$Main$OpenAdjacents = F2(
+	function (a, b) {
+		return {$: 'OpenAdjacents', a: a, b: b};
+	});
+var $author$project$Main$OpenField = F2(
+	function (a, b) {
+		return {$: 'OpenField', a: a, b: b};
+	});
+var $author$project$Main$OpenFieldAndAdjacents = F2(
+	function (a, b) {
+		return {$: 'OpenFieldAndAdjacents', a: a, b: b};
+	});
+var $author$project$Main$UnFlagField = F2(
+	function (a, b) {
+		return {$: 'UnFlagField', a: a, b: b};
+	});
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions = {preventDefault: true, stopPropagation: false};
+var $elm$virtual_dom$VirtualDom$Custom = function (a) {
+	return {$: 'Custom', a: a};
 };
 var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
+var $elm$html$Html$Events$custom = F2(
 	function (event, decoder) {
 		return A2(
 			$elm$virtual_dom$VirtualDom$on,
 			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
+			$elm$virtual_dom$VirtualDom$Custom(decoder));
 	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$Event = F6(
+	function (keys, button, clientPos, offsetPos, pagePos, screenPos) {
+		return {button: button, clientPos: clientPos, keys: keys, offsetPos: offsetPos, pagePos: pagePos, screenPos: screenPos};
+	});
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$BackButton = {$: 'BackButton'};
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$ErrorButton = {$: 'ErrorButton'};
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$ForwardButton = {$: 'ForwardButton'};
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$MainButton = {$: 'MainButton'};
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$MiddleButton = {$: 'MiddleButton'};
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$SecondButton = {$: 'SecondButton'};
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$buttonFromId = function (id) {
+	switch (id) {
+		case 0:
+			return $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$MainButton;
+		case 1:
+			return $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$MiddleButton;
+		case 2:
+			return $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$SecondButton;
+		case 3:
+			return $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$BackButton;
+		case 4:
+			return $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$ForwardButton;
+		default:
+			return $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$ErrorButton;
+	}
 };
-var $elm$html$Html$Events$onDoubleClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'dblclick',
-		$elm$json$Json$Decode$succeed(msg));
-};
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$buttonDecoder = A2(
+	$elm$json$Json$Decode$map,
+	$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$buttonFromId,
+	A2($elm$json$Json$Decode$field, 'button', $elm$json$Json$Decode$int));
+var $elm$json$Json$Decode$float = _Json_decodeFloat;
+var $mpizenberg$elm_pointer_events$Internal$Decode$clientPos = A3(
+	$elm$json$Json$Decode$map2,
+	F2(
+		function (a, b) {
+			return _Utils_Tuple2(a, b);
+		}),
+	A2($elm$json$Json$Decode$field, 'clientX', $elm$json$Json$Decode$float),
+	A2($elm$json$Json$Decode$field, 'clientY', $elm$json$Json$Decode$float));
+var $mpizenberg$elm_pointer_events$Internal$Decode$Keys = F3(
+	function (alt, ctrl, shift) {
+		return {alt: alt, ctrl: ctrl, shift: shift};
+	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$json$Json$Decode$map3 = _Json_map3;
+var $mpizenberg$elm_pointer_events$Internal$Decode$keys = A4(
+	$elm$json$Json$Decode$map3,
+	$mpizenberg$elm_pointer_events$Internal$Decode$Keys,
+	A2($elm$json$Json$Decode$field, 'altKey', $elm$json$Json$Decode$bool),
+	A2($elm$json$Json$Decode$field, 'ctrlKey', $elm$json$Json$Decode$bool),
+	A2($elm$json$Json$Decode$field, 'shiftKey', $elm$json$Json$Decode$bool));
+var $elm$json$Json$Decode$map6 = _Json_map6;
+var $mpizenberg$elm_pointer_events$Internal$Decode$offsetPos = A3(
+	$elm$json$Json$Decode$map2,
+	F2(
+		function (a, b) {
+			return _Utils_Tuple2(a, b);
+		}),
+	A2($elm$json$Json$Decode$field, 'offsetX', $elm$json$Json$Decode$float),
+	A2($elm$json$Json$Decode$field, 'offsetY', $elm$json$Json$Decode$float));
+var $mpizenberg$elm_pointer_events$Internal$Decode$pagePos = A3(
+	$elm$json$Json$Decode$map2,
+	F2(
+		function (a, b) {
+			return _Utils_Tuple2(a, b);
+		}),
+	A2($elm$json$Json$Decode$field, 'pageX', $elm$json$Json$Decode$float),
+	A2($elm$json$Json$Decode$field, 'pageY', $elm$json$Json$Decode$float));
+var $mpizenberg$elm_pointer_events$Internal$Decode$screenPos = A3(
+	$elm$json$Json$Decode$map2,
+	F2(
+		function (a, b) {
+			return _Utils_Tuple2(a, b);
+		}),
+	A2($elm$json$Json$Decode$field, 'screenX', $elm$json$Json$Decode$float),
+	A2($elm$json$Json$Decode$field, 'screenY', $elm$json$Json$Decode$float));
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$eventDecoder = A7($elm$json$Json$Decode$map6, $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$Event, $mpizenberg$elm_pointer_events$Internal$Decode$keys, $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$buttonDecoder, $mpizenberg$elm_pointer_events$Internal$Decode$clientPos, $mpizenberg$elm_pointer_events$Internal$Decode$offsetPos, $mpizenberg$elm_pointer_events$Internal$Decode$pagePos, $mpizenberg$elm_pointer_events$Internal$Decode$screenPos);
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions = F3(
+	function (event, options, tag) {
+		return A2(
+			$elm$html$Html$Events$custom,
+			event,
+			A2(
+				$elm$json$Json$Decode$map,
+				function (ev) {
+					return {
+						message: tag(ev),
+						preventDefault: options.preventDefault,
+						stopPropagation: options.stopPropagation
+					};
+				},
+				$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$eventDecoder));
+	});
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions, 'click', $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions);
+var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions, 'contextmenu', $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions);
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$viewField = F2(
-	function (index, _v0) {
-		var status = _v0.status;
-		var content = _v0.content;
-		var adjacentMines = _v0.adjacentMines;
-		var _v1 = _Utils_Tuple2(status, content);
-		switch (_v1.a.$) {
+var $author$project$Main$viewField = F3(
+	function (_v0, index, _v1) {
+		var fields = _v0.fields;
+		var status = _v1.status;
+		var content = _v1.content;
+		var adjacentMines = A3(
+			$author$project$Main$filterCountAdjacent,
+			index,
+			function (field) {
+				return _Utils_eq(field.content, $author$project$Main$Mine);
+			},
+			fields);
+		var adjacentFlags = A3(
+			$author$project$Main$filterCountAdjacent,
+			index,
+			function (field) {
+				return _Utils_eq(field.status, $author$project$Main$Flag);
+			},
+			fields);
+		var _v2 = _Utils_Tuple2(status, content);
+		switch (_v2.a.$) {
 			case 'Close':
-				var _v2 = _v1.a;
-				return A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Events$onClick(
-							$author$project$Main$Flagged(index)),
-							$elm$html$Html$Events$onDoubleClick(
-							$author$project$Main$Opened(index))
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('[]')
-						]));
-			case 'Open':
-				if (_v1.b.$ === 'Empty') {
-					var _v3 = _v1.a;
-					var _v4 = _v1.b;
+				if (_v2.b.$ === 'Empty') {
+					var _v3 = _v2.a;
+					var _v4 = _v2.b;
 					return (!adjacentMines) ? A2(
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick(
-								$author$project$Main$Opened(index))
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick(
+								$author$project$Main$OpenFieldAndAdjacents(index)),
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
+								$author$project$Main$FlagField(index))
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('.')
+								$elm$html$Html$text('[]')
 							])) : A2(
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick(
-								$author$project$Main$Opened(index))
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick(
+								$author$project$Main$OpenField(index)),
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
+								$author$project$Main$FlagField(index))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('[]')
+							]));
+				} else {
+					var _v5 = _v2.a;
+					var _v6 = _v2.b;
+					return A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick(
+								$author$project$Main$OpenField(index)),
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
+								$author$project$Main$FlagField(index))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('[]')
+							]));
+				}
+			case 'Open':
+				if (_v2.b.$ === 'Empty') {
+					var _v7 = _v2.a;
+					var _v8 = _v2.b;
+					return (!adjacentMines) ? A2(
+						$elm$html$Html$button,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('.')
+							])) : (_Utils_eq(adjacentMines, adjacentFlags) ? A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
+								$author$project$Main$OpenAdjacents(index))
 							]),
 						_List_fromArray(
 							[
 								$elm$html$Html$text(
 								$elm$core$String$fromInt(adjacentMines))
-							]));
-				} else {
-					var _v5 = _v1.a;
-					var _v6 = _v1.b;
-					return A2(
+							])) : A2(
 						$elm$html$Html$button,
+						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick(
-								$author$project$Main$Opened(index))
-							]),
+								$elm$html$Html$text(
+								$elm$core$String$fromInt(adjacentMines))
+							])));
+				} else {
+					var _v9 = _v2.a;
+					var _v10 = _v2.b;
+					return A2(
+						$elm$html$Html$button,
+						_List_Nil,
 						_List_fromArray(
 							[
 								$elm$html$Html$text('M')
 							]));
 				}
 			default:
-				var _v7 = _v1.a;
+				var _v11 = _v2.a;
 				return A2(
 					$elm$html$Html$button,
 					_List_fromArray(
 						[
-							$elm$html$Html$Events$onClick(
-							$author$project$Main$Flagged(index))
+							$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
+							$author$project$Main$UnFlagField(index))
 						]),
 					_List_fromArray(
 						[
@@ -5992,8 +6317,8 @@ var $author$project$Main$view = function (model) {
 					]),
 				A2(
 					$elm$core$List$indexedMap,
-					$author$project$Main$viewField,
-					$elm$core$Array$toList(model)))
+					$author$project$Main$viewField(model),
+					$elm$core$Array$toList(model.fields)))
 			]),
 		title: 'Minesweeper'
 	};

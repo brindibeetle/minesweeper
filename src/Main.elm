@@ -10,12 +10,12 @@ module Main exposing (..)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick, onDoubleClick)
+-- import Html.Events exposing (onClick, onDoubleClick)
 import Html.Attributes exposing (..)
 import Url exposing (Url)
 import Array as Array
 import Random as Random
-import Task as Task
+import Html.Events.Extra.Mouse as ExtraMouse
 
 -- minimum = 3
 xSize : Int
@@ -33,14 +33,16 @@ numberOfMines = 10
 
 -- MODEL
 
-type alias Model = Array.Array Field
+type alias Model = 
+    {
+        fields : Array.Array Field
+    }
 
 
 type alias Field = 
     {
-      status : FieldStatus
-      , content : FieldContent
-      , adjacentMines : Int
+        status : FieldStatus
+        , content : FieldContent
     }
 
 
@@ -55,7 +57,6 @@ type FieldContent =
     | Mine
 
 
-
 main : Program String Model Msg
 main =
     Browser.document
@@ -67,7 +68,7 @@ main =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
+subscriptions model =
     Sub.none
 
 -- INIT
@@ -75,14 +76,19 @@ subscriptions _ =
 init : String -> ( Model, Cmd Msg )
 init _ =  
     let
-        fields = Array.initialize (xSize * ySize) (\index -> getField index) -- |> setMines numberOfMines |> setAdjacentMines
+        fields = Array.initialize (xSize * ySize) (\index -> getField index)
     in
-        ( fields, List.repeat numberOfMines ( Random.generate SetRandomMine minesGenerator ) |> Cmd.batch )
+        ( 
+            { fields = fields
+            }
+            , List.repeat numberOfMines ( Random.generate SetRandomMine minesGenerator )
+              |> Cmd.batch 
+        )
 
 
 getField : Int -> Field
 getField index =
-    { status = Close, content = Empty, adjacentMines = 0 }
+    { status = Close, content = Empty }
     
 
 minesGenerator : Random.Generator Int
@@ -102,155 +108,184 @@ setMine field =
     }
 
 
-setAdjacentMines : Model -> Model
-setAdjacentMines model =
-    Array.indexedMap ( \index field -> ( index, field ) ) model
-    |> Array.filter ( \(index, field) -> field.content == Mine )
-    |> Array.map ( \(index, _ ) -> index )
-    |> Array.foldl ( \index -> doAdjacent index addAdjacentMines ) model
-
-
-addAdjacentMines : Int -> Model -> Model
-addAdjacentMines index model =
-    case Array.get index model of
-        Nothing ->
-            model
-
-        Just field ->
-            case field.content of
-                Empty ->
-                    Array.set 
-                        index 
-                        { field
-                        | adjacentMines = field.adjacentMines + 1
-                        }
-                        model
-
-                _ ->
-                    model
-
 -- UPDATE
 
 
 type Msg
-  = Opened Int
-  | Flagged Int
+  = OpenField Int ExtraMouse.Event
+  | CloseField Int ExtraMouse.Event
+  | FlagField Int ExtraMouse.Event
+  | UnFlagField Int ExtraMouse.Event
+  | OpenFieldAndAdjacents Int ExtraMouse.Event
+  | OpenAdjacents Int ExtraMouse.Event
   | PickRandomIndex
   | SetRandomMine Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    Opened index ->
-        case Array.get index model of
-            Nothing ->
-                ( model, Cmd.none )
+    let
+        { fields } = model
+    in
+        case msg of
+            OpenField index _ ->
+                case Array.get index fields of
+                    Nothing ->
+                        ( model, Cmd.none )
 
-            Just field ->
-                case field.status of
-                    Close ->
-                        ( doOpen index model, Cmd.none )
+                    Just field ->
+                        ( doOpenField index fields |> setFields model , Cmd.none )
 
-                    Open ->
-                        ( doClose index model, Cmd.none )
+            CloseField index _ ->
+                case Array.get index fields of
+                    Nothing ->
+                        ( model, Cmd.none )
+
+                    Just field ->
+                        ( doCloseField index fields |> setFields model, Cmd.none )
+
+            FlagField index _ ->
+                case Array.get index fields of
+                    Nothing ->
+                        ( model, Cmd.none )
+
+                    Just field ->
+                        ( doFlagField index fields |> setFields model, Cmd.none )
+
+            UnFlagField index _ ->
+                case Array.get index fields of
+                    Nothing ->
+                        ( model, Cmd.none )
+
+                    Just field ->
+                        ( doUnFlagField index fields |> setFields model, Cmd.none )
+
+            OpenFieldAndAdjacents index _ ->
+                case Array.get index fields of
+                    Nothing ->
+                        ( model, Cmd.none )
+
+                    Just field ->
+                        ( doOpenFieldAndAdjacents index fields |> setFields model, Cmd.none )
+
+            OpenAdjacents index _ ->
+                case Array.get index fields of
+                    Nothing ->
+                        ( model, Cmd.none )
+
+                    Just field ->
+                        ( doOpenAdjacents index fields |> setFields model, Cmd.none )
+                                
+
+            PickRandomIndex ->
+                ( model , Random.generate SetRandomMine minesGenerator )
+
+            SetRandomMine index ->
+                case Array.get index fields of
+                    Nothing ->
+                        ( model, Cmd.none )
+
+                    Just field ->
+                        case field.content of
+                            Mine ->
+                                ( model, Cmd.none )
+
+                            Empty ->
+                                (
+                                    { model
+                                    | fields =
+                                        Array.set
+                                            index
+                                            { field
+                                            | content = Mine 
+                                            }
+                                            model.fields
+                                    }
+                                    , Cmd.none
+                                )
+
+
+setFields : Model -> Array.Array Field -> Model
+setFields model fields =
+    { model
+    | fields = fields
+    }
+
+
+doOpenField : Int -> Array.Array Field -> Array.Array Field
+doOpenField index fields =
+    case Array.get index fields of
+        Nothing ->
+            fields
+
+        Just field ->
+            Array.set index { field | status = Open } fields
+
+
+doCloseField : Int -> Array.Array Field -> Array.Array Field
+doCloseField index fields =
+    case Array.get index fields of
+        Nothing ->
+            fields
+
+        Just field ->
+            Array.set index { field | status = Close } fields
+
+
+doFlagField : Int -> Array.Array Field -> Array.Array Field
+doFlagField index fields =
+    case Array.get index fields of
+        Nothing ->
+            fields
+
+        Just field ->
+            Array.set index { field | status = Flag } fields
+
+
+doUnFlagField : Int -> Array.Array Field -> Array.Array Field
+doUnFlagField index fields =
+    case Array.get index fields of
+        Nothing ->
+            fields
+
+        Just field ->
+            Array.set index { field | status = Close } fields
+
+
+doOpenFieldAndAdjacents : Int -> Array.Array Field -> Array.Array Field
+doOpenFieldAndAdjacents index fields =
+    case Array.get index fields of
+        Nothing ->
+            fields
+
+        Just field ->
+            case ( field.status, field.content ) of
+                ( Close, Empty ) ->
+                    let
+                        adjacentMines = filterCountAdjacent index ( \field1 -> field1.content == Mine ) fields
+                    in
+                        if adjacentMines == 0 then
+                            doOpenField index fields
+                            |> doAdjacent index doOpenFieldAndAdjacents
+                        else
+                            doOpenField index fields
                     
-                    _ ->
-                        ( model, Cmd.none )
+                ( Close, _ ) ->
+                    doOpenField index fields
 
-    Flagged index ->
-        case Array.get index model of
-            Nothing ->
-                ( model, Cmd.none )
-
-            Just field ->
-                case field.status of
-                    Close ->
-                        ( doFlag index model, Cmd.none )
-
-                    Flag ->
-                        ( doClose index model, Cmd.none )
-                    
-                    _ ->
-                        ( model, Cmd.none )
-
-    PickRandomIndex ->
-        ( model , Random.generate SetRandomMine minesGenerator )
-
-    SetRandomMine index ->
-        case Array.get index model of
-            Nothing ->
-                ( model, Cmd.none )
-
-            Just field ->
-                case field.content of
-                    Mine ->
-                        ( model, Cmd.none )
-
-                    Empty ->
-                        ( Array.set
-                            index
-                            { field
-                            | content = Mine 
-                            }
-                            model
-                        |> doAdjacent index addAdjacentMines
-                        , Cmd.none )
+                ( _, _ ) ->
+                    fields
 
 
-doFlag : Int -> Model -> Model
-doFlag index model =
-    case Array.get index model of
-        Nothing ->
-            model
-
-        Just field ->
-            case field.status of
-                Close ->
-                    doFlagField index model
-
-                _ ->
-                    model
-
-
-doClose : Int -> Model -> Model
-doClose index model =
-    case Array.get index model of
-        Nothing ->
-            model
-
-        Just field ->
-            case field.status of
-                Open ->
-                    doCloseField index model
-                
-                Flag ->
-                    doCloseField index model
-                
-                _ ->
-                    model
-
-
-doOpen : Int -> Model -> Model
-doOpen index model =
-    case Array.get index model of
-        Nothing ->
-            model
-
-        Just field ->
-            case ( field.status, field.content, field.adjacentMines ) of
-                ( Close, Empty, 0 ) ->
-                    doOpenField index model
-                    |> doAdjacent index doOpen
-
-                ( Close, _, _ ) ->
-                    doOpenField index model
-
-                ( _, _, _ ) ->
-                    model
-
-
-
+doOpenAdjacents : Int -> Array.Array Field -> Array.Array Field
+doOpenAdjacents index fields =
+    getAdjacent index
+    |> Array.toList
+    |> List.filterMap ( getIndexField fields )
+    |> Array.fromList
+    |> Array.filter (filterField fieldIsClosed) 
+    |> Array.map getIndex
+    |> Array.foldl doOpenField fields
 
 -- VIEW
 
@@ -266,8 +301,8 @@ view model =
                 , style "grid-template-columns" ( "repeat(" ++ ( String.fromInt xSize ) ++ ", 30px )" ) 
                 , style "grid-template-rows" ( "repeat(" ++ ( String.fromInt ySize ) ++ ", 30px )" ) 
                 ]
-            ( Array.toList model
-            |> List.indexedMap viewField
+            ( Array.toList model.fields
+            |> List.indexedMap (viewField model)
             )
         ]
 
@@ -278,23 +313,35 @@ view model =
   }
 
 
-viewField : Int -> Field -> Html Msg
-viewField index { status, content, adjacentMines } =
-    case ( status, content ) of
-        ( Close, _ ) ->
-            button [ onClick ( Flagged index ), onDoubleClick ( Opened index ) ] [ text "[]" ]
+viewField : Model -> Int -> Field -> Html Msg
+viewField { fields } index { status, content } =
+    let
+        adjacentMines = filterCountAdjacent index ( \field -> field.content == Mine ) fields
+        adjacentFlags = filterCountAdjacent index ( \field -> field.status == Flag ) fields
+    in
+        case ( status, content ) of
+            ( Close, Empty ) ->
+                if adjacentMines == 0 then
+                    button [ ExtraMouse.onClick ( OpenFieldAndAdjacents index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
+                else 
+                    button [ ExtraMouse.onClick ( OpenField index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
 
-        ( Open, Empty ) ->
-            if adjacentMines == 0 then
-                button [ onClick ( Opened index ) ] [ text "." ]
-            else
-                button [ onClick ( Opened index ) ] [ String.fromInt adjacentMines |> text ]
+            ( Close, Mine ) ->
+                button [ ExtraMouse.onClick ( OpenField index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
 
-        ( Open, Mine ) ->
-            button [ onClick ( Opened index ) ] [ text "M" ]
+            ( Open, Empty ) ->
+                if adjacentMines == 0 then
+                    button [ ] [ text "." ]
+                else if adjacentMines == adjacentFlags then
+                    button [ ExtraMouse.onContextMenu ( OpenAdjacents index ) ] [ String.fromInt adjacentMines |> text ]
+                else
+                    button [ ] [ String.fromInt adjacentMines |> text ]
 
-        ( Flag, _ ) ->
-            button [ onClick ( Flagged index ) ] [ text "F" ]
+            ( Open, Mine ) ->
+                button [ ] [ text "M" ]
+
+            ( Flag, _ ) ->
+                button [ ExtraMouse.onContextMenu ( UnFlagField index ) ] [ text "F" ]
 
 
 -- UTILITY
@@ -309,40 +356,53 @@ getColumn index =
         modBy xSize index
 
 
-doAdjacent : Int -> ( Int -> Model -> Model ) -> Model -> Model
-doAdjacent index modelFunction model =
+fieldIsOpen : Field -> Bool
+fieldIsOpen { status } =
+    case status of
+        Open -> True
+        _ -> False
+
+
+fieldIsClosed : Field -> Bool
+fieldIsClosed { status } =
+    case status of
+        Close -> True
+        _ -> False
+
+        
+doAdjacent : Int -> ( Int -> Array.Array Field -> Array.Array Field ) -> Array.Array Field -> Array.Array Field
+doAdjacent index modelFunction fields =
     getAdjacent index
-    |> Array.foldl modelFunction model
+    |> Array.foldl modelFunction fields
 
 
-doOpenField : Int -> Model -> Model
-doOpenField index model =
-    case Array.get index model of
-        Nothing ->
-            model
+getIndexField : Array.Array Field -> Int -> Maybe ( Int, Field )
+getIndexField fields index =
+    case Array.get index fields of
+        Nothing -> 
+            Nothing
 
-        Just field ->
-            Array.set index { field | status = Open } model
-
-
-doCloseField : Int -> Model -> Model
-doCloseField index model =
-    case Array.get index model of
-        Nothing ->
-            model
-
-        Just field ->
-            Array.set index { field | status = Close } model
+        Just field -> 
+            Just ( index, field )
 
 
-doFlagField : Int -> Model -> Model
-doFlagField index model =
-    case Array.get index model of
-        Nothing ->
-            model
+getIndex : ( Int, Field ) -> Int
+getIndex ( index, _ ) =
+    index
+    
 
-        Just field ->
-            Array.set index { field | status = Flag } model
+filterField : ( Field -> Bool ) -> ( Int, Field ) -> Bool
+filterField fieldFilter ( _, field ) =
+    fieldFilter field
+
+
+filterCountAdjacent : Int -> (Field -> Bool) -> Array.Array Field -> Int
+filterCountAdjacent index fieldFilter fields =
+    getAdjacent index
+    |> Array.toList
+    |> List.filterMap ( \index1 -> Array.get index1 fields )
+    |> List.filter fieldFilter
+    |> List.length
 
 
 getAdjacent : Int -> Array.Array Int
@@ -359,16 +419,5 @@ getAdjacent index =
     |> ( if getRow index + 1 < ySize                                  then Array.push ( index + xSize ) else identity )
     |> ( if getRow index + 1 < ySize && getColumn index + 1 < xSize   then Array.push ( index + xSize + 1 ) else identity )
 
-     
-filterAdjacent : Model -> Int -> (Field -> Bool) -> Array.Array Int
-filterAdjacent model index filterFunction =
-    getAdjacent index
-    |> Array.map ( \index1 -> (index1, Array.get index1 model) )
-    |> Array.filter ( \(index1, mField) -> 
-        case mField of
-            Nothing -> False
-            Just field -> filterFunction field
-        )
-    |> Array.map ( \(index1, _) -> index1 )
 
 
