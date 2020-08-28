@@ -1,0 +1,52 @@
+:root {
+    --color-background-field-closed: hsl(40, 10%, 49%);
+    --color-background-field-empty: hsl(150, 50%, 50%);
+    --color-background-field-mine: hsl(0, 90%, 50%);
+    --color-background-field-flag: hsl(200, 75%, 50%);
+
+    --color-field-empty: black;
+}
+
+div.info-container{
+}
+div.info-text {
+    text-align: left;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: small;
+}
+
+
+div.mine-container{
+    position: absolute;
+    display: block;
+    
+    left: 50%;
+    top: 330px;   
+}
+div.mine-grid {
+    display: grid;
+    text-align: center;
+}
+
+div.field {
+    border-color: black;
+    border: solid;
+    border-width: thin;
+}
+div.field-closed {
+    background-color: var(--color-background-field-closed);
+}
+
+div.field-empty {
+    background-color: var(--color-background-field-empty);
+    color: var(--color-field-empty);
+}
+
+div.field-mine {
+    background-color: var(--color-background-field-mine);
+}
+
+div.field-flag {
+    background-color: var(--color-background-field-flag);
+}
+

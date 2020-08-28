@@ -5385,8 +5385,8 @@ var $elm$random$Random$int = F2(
 				}
 			});
 	});
-var $author$project$Main$xSize = 8;
-var $author$project$Main$ySize = 8;
+var $author$project$Main$xSize = 20;
+var $author$project$Main$ySize = 20;
 var $author$project$Main$minesGenerator = A2($elm$random$Random$int, 0, ($author$project$Main$xSize * $author$project$Main$ySize) - 1);
 var $author$project$Main$numberOfMines = 10;
 var $elm$core$List$repeatHelp = F3(
@@ -5548,101 +5548,6 @@ var $author$project$Main$doFlagField = F2(
 				fields);
 		}
 	});
-var $author$project$Main$Open = {$: 'Open'};
-var $author$project$Main$doOpenField = F2(
-	function (index, fields) {
-		var _v0 = A2($elm$core$Array$get, index, fields);
-		if (_v0.$ === 'Nothing') {
-			return fields;
-		} else {
-			var field = _v0.a;
-			return A3(
-				$elm$core$Array$set,
-				index,
-				_Utils_update(
-					field,
-					{status: $author$project$Main$Open}),
-				fields);
-		}
-	});
-var $author$project$Main$fieldIsClosed = function (_v0) {
-	var status = _v0.status;
-	if (status.$ === 'Close') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $elm$core$Array$fromListHelp = F3(
-	function (list, nodeList, nodeListSize) {
-		fromListHelp:
-		while (true) {
-			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
-			var jsArray = _v0.a;
-			var remainingItems = _v0.b;
-			if (_Utils_cmp(
-				$elm$core$Elm$JsArray$length(jsArray),
-				$elm$core$Array$branchFactor) < 0) {
-				return A2(
-					$elm$core$Array$builderToArray,
-					true,
-					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
-			} else {
-				var $temp$list = remainingItems,
-					$temp$nodeList = A2(
-					$elm$core$List$cons,
-					$elm$core$Array$Leaf(jsArray),
-					nodeList),
-					$temp$nodeListSize = nodeListSize + 1;
-				list = $temp$list;
-				nodeList = $temp$nodeList;
-				nodeListSize = $temp$nodeListSize;
-				continue fromListHelp;
-			}
-		}
-	});
-var $elm$core$Array$fromList = function (list) {
-	if (!list.b) {
-		return $elm$core$Array$empty;
-	} else {
-		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
-	}
-};
-var $elm$core$Array$filter = F2(
-	function (isGood, array) {
-		return $elm$core$Array$fromList(
-			A3(
-				$elm$core$Array$foldr,
-				F2(
-					function (x, xs) {
-						return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-					}),
-				_List_Nil,
-				array));
-	});
-var $author$project$Main$filterField = F2(
-	function (fieldFilter, _v0) {
-		var field = _v0.b;
-		return fieldFilter(field);
-	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Array$foldl = F3(
 	function (func, baseCase, _v0) {
@@ -5771,65 +5676,6 @@ var $author$project$Main$getAdjacent = function (index) {
 							(($author$project$Main$getRow(index) > 0) ? $elm$core$Array$push(index - $author$project$Main$xSize) : $elm$core$Basics$identity)(
 								((($author$project$Main$getRow(index) > 0) && ($author$project$Main$getColumn(index) > 0)) ? $elm$core$Array$push((index - $author$project$Main$xSize) - 1) : $elm$core$Basics$identity)($elm$core$Array$empty))))))));
 };
-var $author$project$Main$getIndex = function (_v0) {
-	var index = _v0.a;
-	return index;
-};
-var $author$project$Main$getIndexField = F2(
-	function (fields, index) {
-		var _v0 = A2($elm$core$Array$get, index, fields);
-		if (_v0.$ === 'Nothing') {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var field = _v0.a;
-			return $elm$core$Maybe$Just(
-				_Utils_Tuple2(index, field));
-		}
-	});
-var $elm$core$Elm$JsArray$map = _JsArray_map;
-var $elm$core$Array$map = F2(
-	function (func, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = function (node) {
-			if (node.$ === 'SubTree') {
-				var subTree = node.a;
-				return $elm$core$Array$SubTree(
-					A2($elm$core$Elm$JsArray$map, helper, subTree));
-			} else {
-				var values = node.a;
-				return $elm$core$Array$Leaf(
-					A2($elm$core$Elm$JsArray$map, func, values));
-			}
-		};
-		return A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A2($elm$core$Elm$JsArray$map, helper, tree),
-			A2($elm$core$Elm$JsArray$map, func, tail));
-	});
-var $author$project$Main$doOpenAdjacents = F2(
-	function (index, fields) {
-		return A3(
-			$elm$core$Array$foldl,
-			$author$project$Main$doOpenField,
-			fields,
-			A2(
-				$elm$core$Array$map,
-				$author$project$Main$getIndex,
-				A2(
-					$elm$core$Array$filter,
-					$author$project$Main$filterField($author$project$Main$fieldIsClosed),
-					$elm$core$Array$fromList(
-						A2(
-							$elm$core$List$filterMap,
-							$author$project$Main$getIndexField(fields),
-							$elm$core$Array$toList(
-								$author$project$Main$getAdjacent(index)))))));
-	});
 var $author$project$Main$doAdjacent = F3(
 	function (index, modelFunction, fields) {
 		return A3(
@@ -5837,6 +5683,23 @@ var $author$project$Main$doAdjacent = F3(
 			modelFunction,
 			fields,
 			$author$project$Main$getAdjacent(index));
+	});
+var $author$project$Main$Open = {$: 'Open'};
+var $author$project$Main$doOpenField = F2(
+	function (index, fields) {
+		var _v0 = A2($elm$core$Array$get, index, fields);
+		if (_v0.$ === 'Nothing') {
+			return fields;
+		} else {
+			var field = _v0.a;
+			return A3(
+				$elm$core$Array$set,
+				index,
+				_Utils_update(
+					field,
+					{status: $author$project$Main$Open}),
+				fields);
+		}
 	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -5848,6 +5711,24 @@ var $elm$core$List$filter = F2(
 				}),
 			_List_Nil,
 			list);
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
 	});
 var $author$project$Main$filterCountAdjacent = F3(
 	function (index, fieldFilter, fields) {
@@ -5895,6 +5776,10 @@ var $author$project$Main$doOpenFieldAndAdjacents = F2(
 				return fields;
 			}
 		}
+	});
+var $author$project$Main$doOpenAdjacents = F2(
+	function (index, fields) {
+		return A3($author$project$Main$doAdjacent, index, $author$project$Main$doOpenFieldAndAdjacents, fields);
 	});
 var $author$project$Main$doUnFlagField = F2(
 	function (index, fields) {
@@ -6012,7 +5897,7 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					model,
 					A2($elm$random$Random$generate, $author$project$Main$SetRandomMine, $author$project$Main$minesGenerator));
-			default:
+			case 'SetRandomMine':
 				var index = msg.a;
 				var _v8 = A2($elm$core$Array$get, index, fields);
 				if (_v8.$ === 'Nothing') {
@@ -6021,7 +5906,9 @@ var $author$project$Main$update = F2(
 					var field = _v8.a;
 					var _v9 = field.content;
 					if (_v9.$ === 'Mine') {
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return _Utils_Tuple2(
+							model,
+							A2($elm$random$Random$generate, $author$project$Main$SetRandomMine, $author$project$Main$minesGenerator));
 					} else {
 						return _Utils_Tuple2(
 							_Utils_update(
@@ -6038,11 +5925,95 @@ var $author$project$Main$update = F2(
 							$elm$core$Platform$Cmd$none);
 					}
 				}
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $author$project$Main$getStatusReport = function (fields) {
+	return A3(
+		$elm$core$Array$foldl,
+		F2(
+			function (_v0, statusReport) {
+				var status = _v0.status;
+				var content = _v0.content;
+				var _v1 = statusReport;
+				var flags = _v1.flags;
+				var mineFlags = _v1.mineFlags;
+				var openFields = _v1.openFields;
+				var _v2 = _Utils_Tuple2(status, content);
+				switch (_v2.a.$) {
+					case 'Flag':
+						if (_v2.b.$ === 'Mine') {
+							var _v3 = _v2.a;
+							var _v4 = _v2.b;
+							return _Utils_update(
+								statusReport,
+								{flags: flags + 1, mineFlags: mineFlags + 1, openFields: openFields + 1});
+						} else {
+							var _v5 = _v2.a;
+							return _Utils_update(
+								statusReport,
+								{flags: flags + 1});
+						}
+					case 'Open':
+						var _v6 = _v2.a;
+						return _Utils_update(
+							statusReport,
+							{openFields: openFields + 1});
+					default:
+						return statusReport;
+				}
+			}),
+		{flags: 0, mineFlags: 0, openFields: 0},
+		fields);
+};
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
+var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
+var $rundis$elm_bootstrap$Bootstrap$CDN$stylesheet = A3(
+	$elm$html$Html$node,
+	'link',
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$rel('stylesheet'),
+			$elm$html$Html$Attributes$href('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
+		]),
+	_List_Nil);
+var $author$project$MinesweeperCDN$stylesheet = A3(
+	$elm$html$Html$node,
+	'link',
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$rel('stylesheet'),
+			$elm$html$Html$Attributes$href('src/resources/minesweeper.css')
+		]),
+	_List_Nil);
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$DoNothing = function (a) {
+	return {$: 'DoNothing', a: a};
+};
 var $author$project$Main$FlagField = F2(
 	function (a, b) {
 		return {$: 'FlagField', a: a, b: b};
@@ -6063,7 +6034,6 @@ var $author$project$Main$UnFlagField = F2(
 	function (a, b) {
 		return {$: 'UnFlagField', a: a, b: b};
 	});
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions = {preventDefault: true, stopPropagation: false};
 var $elm$virtual_dom$VirtualDom$Custom = function (a) {
 	return {$: 'Custom', a: a};
@@ -6173,8 +6143,6 @@ var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions = F3(
 	});
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions, 'click', $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions);
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions, 'contextmenu', $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions);
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$viewField = F3(
 	function (_v0, index, _v1) {
 		var fields = _v0.fields;
@@ -6201,9 +6169,10 @@ var $author$project$Main$viewField = F3(
 					var _v3 = _v2.a;
 					var _v4 = _v2.b;
 					return (!adjacentMines) ? A2(
-						$elm$html$Html$button,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$class('field field-closed'),
 								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick(
 								$author$project$Main$OpenFieldAndAdjacents(index)),
 								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
@@ -6213,9 +6182,10 @@ var $author$project$Main$viewField = F3(
 							[
 								$elm$html$Html$text('[]')
 							])) : A2(
-						$elm$html$Html$button,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$class('field field-closed'),
 								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick(
 								$author$project$Main$OpenField(index)),
 								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
@@ -6229,9 +6199,10 @@ var $author$project$Main$viewField = F3(
 					var _v5 = _v2.a;
 					var _v6 = _v2.b;
 					return A2(
-						$elm$html$Html$button,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$class('field field-closed'),
 								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick(
 								$author$project$Main$OpenField(index)),
 								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
@@ -6247,15 +6218,20 @@ var $author$project$Main$viewField = F3(
 					var _v7 = _v2.a;
 					var _v8 = _v2.b;
 					return (!adjacentMines) ? A2(
-						$elm$html$Html$button,
-						_List_Nil,
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('field field-empty'),
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu($author$project$Main$DoNothing)
+							]),
 						_List_fromArray(
 							[
 								$elm$html$Html$text('.')
 							])) : (_Utils_eq(adjacentMines, adjacentFlags) ? A2(
-						$elm$html$Html$button,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$class('field field-empty'),
 								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
 								$author$project$Main$OpenAdjacents(index))
 							]),
@@ -6264,8 +6240,12 @@ var $author$project$Main$viewField = F3(
 								$elm$html$Html$text(
 								$elm$core$String$fromInt(adjacentMines))
 							])) : A2(
-						$elm$html$Html$button,
-						_List_Nil,
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('field field-empty'),
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu($author$project$Main$DoNothing)
+							]),
 						_List_fromArray(
 							[
 								$elm$html$Html$text(
@@ -6275,8 +6255,12 @@ var $author$project$Main$viewField = F3(
 					var _v9 = _v2.a;
 					var _v10 = _v2.b;
 					return A2(
-						$elm$html$Html$button,
-						_List_Nil,
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('field field-mine'),
+								$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu($author$project$Main$DoNothing)
+							]),
 						_List_fromArray(
 							[
 								$elm$html$Html$text('M')
@@ -6285,9 +6269,10 @@ var $author$project$Main$viewField = F3(
 			default:
 				var _v11 = _v2.a;
 				return A2(
-					$elm$html$Html$button,
+					$elm$html$Html$div,
 					_List_fromArray(
 						[
+							$elm$html$Html$Attributes$class('field field-flag'),
 							$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu(
 							$author$project$Main$UnFlagField(index))
 						]),
@@ -6298,27 +6283,84 @@ var $author$project$Main$viewField = F3(
 		}
 	});
 var $author$project$Main$view = function (model) {
+	var _v0 = $author$project$Main$getStatusReport(model.fields);
+	var flags = _v0.flags;
+	var mineFlags = _v0.mineFlags;
+	var openFields = _v0.openFields;
 	return {
 		body: _List_fromArray(
 			[
+				$rundis$elm_bootstrap$Bootstrap$CDN$stylesheet,
+				$author$project$MinesweeperCDN$stylesheet,
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'display', 'grid'),
+						$elm$html$Html$Attributes$class('mine-container'),
 						A2(
 						$elm$html$Html$Attributes$style,
-						'grid-template-columns',
-						'repeat(' + ($elm$core$String$fromInt($author$project$Main$xSize) + ', 30px )')),
+						'width',
+						$elm$core$String$fromInt($author$project$Main$xSize * 32) + 'px'),
 						A2(
 						$elm$html$Html$Attributes$style,
-						'grid-template-rows',
-						'repeat(' + ($elm$core$String$fromInt($author$project$Main$ySize) + ', 30px )'))
+						'height',
+						$elm$core$String$fromInt($author$project$Main$ySize * 32) + 'px'),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'margin-left',
+						$elm$core$String$fromInt((($author$project$Main$xSize * 32) / (-2)) | 0) + 'px'),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'margin-top',
+						$elm$core$String$fromInt((($author$project$Main$ySize * 32) / (-2)) | 0) + 'px')
 					]),
-				A2(
-					$elm$core$List$indexedMap,
-					$author$project$Main$viewField(model),
-					$elm$core$Array$toList(model.fields)))
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('info-container')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('info-text')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(
+												$elm$core$String$fromInt(openFields) + ('/' + ($elm$core$String$fromInt($author$project$Main$xSize * $author$project$Main$ySize) + (' fields, ' + ($elm$core$String$fromInt(mineFlags) + ('/' + ($elm$core$String$fromInt($author$project$Main$numberOfMines) + ' mines')))))))
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mine-grid'),
+												A2(
+												$elm$html$Html$Attributes$style,
+												'grid-template-columns',
+												'repeat(' + ($elm$core$String$fromInt($author$project$Main$xSize) + ', 30px )')),
+												A2(
+												$elm$html$Html$Attributes$style,
+												'grid-template-rows',
+												'repeat(' + ($elm$core$String$fromInt($author$project$Main$ySize) + ', 30px )'))
+											]),
+										A2(
+											$elm$core$List$indexedMap,
+											$author$project$Main$viewField(model),
+											$elm$core$Array$toList(model.fields)))
+									]))
+							]))
+					]))
 			]),
 		title: 'Minesweeper'
 	};

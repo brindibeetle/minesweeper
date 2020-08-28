@@ -1,30 +1,26 @@
 module Main exposing (..)
 
--- Press buttons to increment and decrement a counter.
---
--- Read how it works:
---   https://guide.elm-lang.org/architecture/buttons.html
---
-
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Html exposing (Html, button, div, text)
--- import Html.Events exposing (onClick, onDoubleClick)
 import Html.Attributes exposing (..)
 import Url exposing (Url)
 import Array as Array
 import Random as Random
 import Html.Events.Extra.Mouse as ExtraMouse
+import Bootstrap.CDN as CDN
+import MinesweeperCDN exposing (..)
+
 
 -- minimum = 3
 xSize : Int
-xSize = 8
+xSize = 20
 
 
 -- minimum = 3
 ySize : Int
-ySize = 8
+ySize = 20
 
 
 numberOfMines : Int
@@ -120,6 +116,7 @@ type Msg
   | OpenAdjacents Int ExtraMouse.Event
   | PickRandomIndex
   | SetRandomMine Int
+  | DoNothing ExtraMouse.Event
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -188,7 +185,7 @@ update msg model =
                     Just field ->
                         case field.content of
                             Mine ->
-                                ( model, Cmd.none )
+                                ( model, Random.generate SetRandomMine minesGenerator )
 
                             Empty ->
                                 (
@@ -203,6 +200,8 @@ update msg model =
                                     }
                                     , Cmd.none
                                 )
+            DoNothing _ ->
+                ( model, Cmd.none )
 
 
 setFields : Model -> Array.Array Field -> Model
@@ -279,38 +278,59 @@ doOpenFieldAndAdjacents index fields =
 
 doOpenAdjacents : Int -> Array.Array Field -> Array.Array Field
 doOpenAdjacents index fields =
-    getAdjacent index
-    |> Array.toList
-    |> List.filterMap ( getIndexField fields )
-    |> Array.fromList
-    |> Array.filter (filterField fieldIsClosed) 
-    |> Array.map getIndex
-    |> Array.foldl doOpenField fields
+    doAdjacent index doOpenFieldAndAdjacents fields
+    -- getAdjacent index
+    -- |> Array.toList
+    -- |> List.filterMap ( getIndexField fields )
+    -- |> Array.fromList
+    -- |> Array.filter (filterField fieldIsClosed) 
+    -- |> Array.map getIndex
+    -- |> Array.foldl doOpenField fields
 
 -- VIEW
 
 
 view : Model -> Document Msg
 view model =
-  {
-    title = "Minesweeper"
-    , body = 
-        [
-            div 
-                [ style "display" "grid"
-                , style "grid-template-columns" ( "repeat(" ++ ( String.fromInt xSize ) ++ ", 30px )" ) 
-                , style "grid-template-rows" ( "repeat(" ++ ( String.fromInt ySize ) ++ ", 30px )" ) 
+    let
+        { flags, mineFlags, openFields } = getStatusReport model.fields
+    in
+        {
+            title = "Minesweeper"
+            , body = 
+                [
+                    CDN.stylesheet
+                    , MinesweeperCDN.stylesheet
+                    , div 
+                        [ class "mine-container" 
+                        , style "width" ( ( String.fromInt ( xSize * 32 ) ) ++ "px" )
+                        , style "height" ( ( String.fromInt ( ySize * 32 ) ) ++ "px" )
+                        , style "margin-left" ( ( String.fromInt ( xSize * 32 // -2 )) ++ "px" )
+                        , style "margin-top" ( ( String.fromInt ( ySize * 32 // -2 )) ++ "px" )
+                        ]
+                        [ div
+                                []
+                                [ div 
+                                    [ class "info-container" ] 
+                                    [ div 
+                                        [ class "info-text" ]
+                                        [ 
+                                            text ( String.fromInt openFields ++ "/" ++ String.fromInt ( xSize * ySize ) ++ " fields, " 
+                                                ++ String.fromInt mineFlags ++ "/" ++ String.fromInt numberOfMines ++ " mines" )
+                                        ]
+                                    , div 
+                                        [ class "mine-grid"
+                                        , style "grid-template-columns" ( "repeat(" ++ ( String.fromInt xSize ) ++ ", 30px )" ) 
+                                        , style "grid-template-rows" ( "repeat(" ++ ( String.fromInt ySize ) ++ ", 30px )" ) 
+                                        ]
+                                        ( Array.toList model.fields
+                                        |> List.indexedMap (viewField model)
+                                        )   
+                                    ]
+                                ]
+                        ]
                 ]
-            ( Array.toList model.fields
-            |> List.indexedMap (viewField model)
-            )
-        ]
-
-      -- [ button [ onClick Decrement ] [ text "-" ]
-      -- , div [] [ text (String.fromInt model) ]
-      -- , button [ onClick Increment ] [ text "+" ]
-      -- ]
-  }
+        }
 
 
 viewField : Model -> Int -> Field -> Html Msg
@@ -322,26 +342,26 @@ viewField { fields } index { status, content } =
         case ( status, content ) of
             ( Close, Empty ) ->
                 if adjacentMines == 0 then
-                    button [ ExtraMouse.onClick ( OpenFieldAndAdjacents index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
+                    div [ class "field field-closed", ExtraMouse.onClick ( OpenFieldAndAdjacents index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
                 else 
-                    button [ ExtraMouse.onClick ( OpenField index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
+                    div [ class "field field-closed", ExtraMouse.onClick ( OpenField index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
 
             ( Close, Mine ) ->
-                button [ ExtraMouse.onClick ( OpenField index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
+                div [ class "field field-closed", ExtraMouse.onClick ( OpenField index ), ExtraMouse.onContextMenu ( FlagField index ) ] [ text "[]" ]
 
             ( Open, Empty ) ->
                 if adjacentMines == 0 then
-                    button [ ] [ text "." ]
+                    div [ class "field field-empty", ExtraMouse.onContextMenu DoNothing ] [ text "." ]
                 else if adjacentMines == adjacentFlags then
-                    button [ ExtraMouse.onContextMenu ( OpenAdjacents index ) ] [ String.fromInt adjacentMines |> text ]
+                    div [ class "field field-empty" , ExtraMouse.onContextMenu ( OpenAdjacents index ) ] [ String.fromInt adjacentMines |> text ]
                 else
-                    button [ ] [ String.fromInt adjacentMines |> text ]
+                    div [ class "field field-empty" , ExtraMouse.onContextMenu DoNothing ] [ String.fromInt adjacentMines |> text ]
 
             ( Open, Mine ) ->
-                button [ ] [ text "M" ]
+                div [ class "field field-mine" , ExtraMouse.onContextMenu DoNothing ] [ text "M" ]
 
             ( Flag, _ ) ->
-                button [ ExtraMouse.onContextMenu ( UnFlagField index ) ] [ text "F" ]
+                div [ class "field field-flag", ExtraMouse.onContextMenu ( UnFlagField index ) ] [ text "F" ]
 
 
 -- UTILITY
@@ -420,4 +440,33 @@ getAdjacent index =
     |> ( if getRow index + 1 < ySize && getColumn index + 1 < xSize   then Array.push ( index + xSize + 1 ) else identity )
 
 
+getStatusReport : Array.Array Field -> { flags : Int, mineFlags : Int, openFields : Int }
+getStatusReport fields =
+    Array.foldl 
+        ( \{ status, content } statusReport -> 
+            let
+                { flags, mineFlags, openFields } = statusReport
+            in
+            case ( status, content ) of
+                ( Flag, Mine ) ->
+                    { statusReport 
+                    | flags = flags + 1
+                    , mineFlags = mineFlags + 1
+                    , openFields = openFields + 1
+                    }
 
+                ( Flag, _ ) ->
+                    { statusReport 
+                    | flags = flags + 1
+                    }
+                
+                ( Open, _ ) ->
+                    { statusReport 
+                    | openFields = openFields + 1
+                    }
+
+                ( _, _) ->
+                    statusReport
+        )
+        { flags = 0, mineFlags = 0, openFields = 0 }
+        fields
