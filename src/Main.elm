@@ -3,28 +3,19 @@ module Main exposing (..)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
-import Html exposing (Html, button, div, text)
+import Html exposing (..)
 import Html.Attributes exposing (..)
 import Url exposing (Url)
 import Array as Array
 import Random as Random
 import Html.Events.Extra.Mouse as ExtraMouse
 import Bootstrap.CDN as CDN
+import Bootstrap.Form.Input as Input
+
 import MinesweeperCDN exposing (..)
+import Parameters as Parameters exposing (..)
 
 
--- minimum = 3
-xSize : Int
-xSize = 20
-
-
--- minimum = 3
-ySize : Int
-ySize = 20
-
-
-numberOfMines : Int
-numberOfMines = 10
 
 
 -- MODEL
@@ -32,6 +23,8 @@ numberOfMines = 10
 type alias Model = 
     {
         fields : Array.Array Field
+        , parameters : Parameters.Parameters
+        , parametersNew : Parameters.Parameters
     }
 
 
@@ -56,7 +49,7 @@ type FieldContent =
 main : Program String Model Msg
 main =
     Browser.document
-        { init = init
+        { init = init Parameters.init
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -69,15 +62,18 @@ subscriptions model =
 
 -- INIT
 
-init : String -> ( Model, Cmd Msg )
-init _ =  
+init : Parameters -> String -> ( Model, Cmd Msg )
+init parameters _ =  
     let
-        fields = Array.initialize (xSize * ySize) (\index -> getField index)
+        fields = Array.initialize (Parameters.getSize parameters) (\index -> getField index)
+        { mines } = parameters
     in
         ( 
             { fields = fields
+            , parameters = parameters
+            , parametersNew = parameters
             }
-            , List.repeat numberOfMines ( Random.generate SetRandomMine minesGenerator )
+            , List.repeat mines ( Random.generate SetRandomMine (minesGenerator parameters) )
               |> Cmd.batch 
         )
 
@@ -87,9 +83,9 @@ getField index =
     { status = Close, content = Empty }
     
 
-minesGenerator : Random.Generator Int
-minesGenerator =
-    Random.int 0 (xSize * ySize - 1)
+minesGenerator : Parameters -> Random.Generator Int
+minesGenerator parameters =
+    Random.int 0 (Parameters.getSize parameters - 1)
 
 
 getRandom : Int -> Int
@@ -108,21 +104,25 @@ setMine field =
 
 
 type Msg
-  = OpenField Int ExtraMouse.Event
-  | CloseField Int ExtraMouse.Event
-  | FlagField Int ExtraMouse.Event
-  | UnFlagField Int ExtraMouse.Event
-  | OpenFieldAndAdjacents Int ExtraMouse.Event
-  | OpenAdjacents Int ExtraMouse.Event
-  | PickRandomIndex
-  | SetRandomMine Int
-  | DoNothing ExtraMouse.Event
-
+    = OpenField Int ExtraMouse.Event
+    | CloseField Int ExtraMouse.Event
+    | FlagField Int ExtraMouse.Event
+    | UnFlagField Int ExtraMouse.Event
+    | OpenFieldAndAdjacents Int ExtraMouse.Event
+    | OpenAdjacents Int ExtraMouse.Event
+    | PickRandomIndex
+    | SetRandomMine Int
+    | DoNothing ExtraMouse.Event
+    | DoClear ExtraMouse.Event
+    | DoNew ExtraMouse.Event
+    | DoXsize String
+    | DoYsize String
+    | DoMines String
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { fields } = model
+        { fields, parameters, parametersNew } = model
     in
         case msg of
             OpenField index _ ->
@@ -163,7 +163,7 @@ update msg model =
                         ( model, Cmd.none )
 
                     Just field ->
-                        ( doOpenFieldAndAdjacents index fields |> setFields model, Cmd.none )
+                        ( doOpenFieldAndAdjacents parameters index fields |> setFields model, Cmd.none )
 
             OpenAdjacents index _ ->
                 case Array.get index fields of
@@ -171,11 +171,11 @@ update msg model =
                         ( model, Cmd.none )
 
                     Just field ->
-                        ( doOpenAdjacents index fields |> setFields model, Cmd.none )
+                        ( doOpenAdjacents parameters index fields |> setFields model, Cmd.none )
                                 
 
             PickRandomIndex ->
-                ( model , Random.generate SetRandomMine minesGenerator )
+                ( model , Random.generate SetRandomMine (minesGenerator parameters) )
 
             SetRandomMine index ->
                 case Array.get index fields of
@@ -185,7 +185,7 @@ update msg model =
                     Just field ->
                         case field.content of
                             Mine ->
-                                ( model, Random.generate SetRandomMine minesGenerator )
+                                ( model, Random.generate SetRandomMine (minesGenerator parameters) )
 
                             Empty ->
                                 (
@@ -202,6 +202,63 @@ update msg model =
                                 )
             DoNothing _ ->
                 ( model, Cmd.none )
+
+            DoClear _ ->
+                (
+                    { model
+                    | fields = doClearFields fields 
+                    , parametersNew = parameters
+                    }
+                    , Cmd.none
+                )
+
+            DoNew _ ->
+                init parametersNew ""
+
+            DoXsize newSize ->
+                case String.toInt newSize of
+                    Nothing ->
+                        ( model, Cmd.none )
+                    Just size ->
+                        let
+                            parameters1 = { parametersNew | xSize = size }
+                        in
+                            (
+                                { model
+                                | parametersNew = parameters1
+                                }
+                                , Cmd.none
+                            )
+
+            DoYsize newSize ->
+                case String.toInt newSize of
+                    Nothing ->
+                        ( model, Cmd.none )
+                    Just size ->
+                        let
+                            parameters1 = { parametersNew | ySize = size }
+                        in
+                            (
+                                { model
+                                | parametersNew = parameters1
+                                }
+                                , Cmd.none
+                            )
+
+            DoMines newSize ->
+                case String.toInt newSize of
+                    Nothing ->
+                        ( model, Cmd.none )
+                    Just size ->
+                        let
+                            parameters1 = { parametersNew | mines = size }
+                        in
+                            (
+                                { model
+                                | parametersNew = parameters1
+                                }
+                                , Cmd.none
+                            )
 
 
 setFields : Model -> Array.Array Field -> Model
@@ -251,8 +308,8 @@ doUnFlagField index fields =
             Array.set index { field | status = Close } fields
 
 
-doOpenFieldAndAdjacents : Int -> Array.Array Field -> Array.Array Field
-doOpenFieldAndAdjacents index fields =
+doOpenFieldAndAdjacents : Parameters -> Int -> Array.Array Field -> Array.Array Field
+doOpenFieldAndAdjacents parameters index fields =
     case Array.get index fields of
         Nothing ->
             fields
@@ -261,11 +318,11 @@ doOpenFieldAndAdjacents index fields =
             case ( field.status, field.content ) of
                 ( Close, Empty ) ->
                     let
-                        adjacentMines = filterCountAdjacent index ( \field1 -> field1.content == Mine ) fields
+                        adjacentMines = filterCountAdjacent parameters index ( \field1 -> field1.content == Mine ) fields
                     in
                         if adjacentMines == 0 then
                             doOpenField index fields
-                            |> doAdjacent index doOpenFieldAndAdjacents
+                            |> doAdjacent parameters index (doOpenFieldAndAdjacents parameters)
                         else
                             doOpenField index fields
                     
@@ -276,9 +333,9 @@ doOpenFieldAndAdjacents index fields =
                     fields
 
 
-doOpenAdjacents : Int -> Array.Array Field -> Array.Array Field
-doOpenAdjacents index fields =
-    doAdjacent index doOpenFieldAndAdjacents fields
+doOpenAdjacents : Parameters -> Int -> Array.Array Field -> Array.Array Field
+doOpenAdjacents parameters index fields =
+    doAdjacent parameters index (doOpenFieldAndAdjacents parameters) fields
     -- getAdjacent index
     -- |> Array.toList
     -- |> List.filterMap ( getIndexField fields )
@@ -287,6 +344,10 @@ doOpenAdjacents index fields =
     -- |> Array.map getIndex
     -- |> Array.foldl doOpenField fields
 
+
+doClearFields : Array.Array Field -> Array.Array Field
+doClearFields fields =
+    Array.map ( \field -> { field | status = Close } ) fields
 -- VIEW
 
 
@@ -294,6 +355,9 @@ view : Model -> Document Msg
 view model =
     let
         { flags, mineFlags, openFields } = getStatusReport model.fields
+        { xSize, ySize, mines } = model.parameters
+        { parametersNew, parameters } = model
+        errorMessage = Parameters.validate parametersNew |> Maybe.withDefault "" 
     in
         {
             title = "Minesweeper"
@@ -303,10 +367,10 @@ view model =
                     , MinesweeperCDN.stylesheet
                     , div 
                         [ class "mine-container" 
-                        , style "width" ( ( String.fromInt ( xSize * 32 ) ) ++ "px" )
-                        , style "height" ( ( String.fromInt ( ySize * 32 ) ) ++ "px" )
-                        , style "margin-left" ( ( String.fromInt ( xSize * 32 // -2 )) ++ "px" )
-                        , style "margin-top" ( ( String.fromInt ( ySize * 32 // -2 )) ++ "px" )
+                        , style "width" ( ( String.fromInt ( xSize * 30 ) ) ++ "px" )
+                        , style "height" ( ( String.fromInt ( ySize * 30 ) ) ++ "px" )
+                        , style "margin-left" ( ( String.fromInt ( xSize * 30 // -2 )) ++ "px" )
+                        , style "margin-top" ( ( String.fromInt ( ySize * 30 // -2 )) ++ "px" )
                         ]
                         [ div
                                 []
@@ -316,7 +380,10 @@ view model =
                                         [ class "info-text" ]
                                         [ 
                                             text ( String.fromInt openFields ++ "/" ++ String.fromInt ( xSize * ySize ) ++ " fields, " 
-                                                ++ String.fromInt mineFlags ++ "/" ++ String.fromInt numberOfMines ++ " mines" )
+                                                ++ String.fromInt mineFlags ++ "/" ++ String.fromInt mines ++ " mines" )
+                                            , div [ class "buttons-container" ] 
+                                                [ button [ class "mine-button", ExtraMouse.onClick DoClear ] [ text "clear" ]
+                                                ]
                                         ]
                                     , div 
                                         [ class "mine-grid"
@@ -325,7 +392,28 @@ view model =
                                         ]
                                         ( Array.toList model.fields
                                         |> List.indexedMap (viewField model)
-                                        )   
+                                        )
+                                    , div 
+                                        [ class "info-text" ]
+                                        [   
+                                            div ( if parametersNew.xSize == parameters.xSize then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
+                                                [ div [ class "mine-label" ] [ text "x size"]
+                                                , Input.number [ Input.value (String.fromInt parametersNew.xSize), Input.attrs [ class "mine-value" ], Input.onInput DoXsize ]
+                                                ]
+                                            , div ( if parametersNew.ySize == parameters.ySize then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
+                                                [ div [ class "mine-label" ] [ text "y size"]
+                                                , Input.number [ Input.value (String.fromInt parametersNew.ySize), Input.attrs [ class "mine-value" ], Input.onInput DoYsize ]
+                                                ]
+                                            , div ( if parametersNew.mines == parameters.mines then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
+                                                [ div [ class "mine-label" ] [ text "mines"]
+                                                , Input.number [ Input.value (String.fromInt parametersNew.mines), Input.attrs [ class "mine-value" ], Input.onInput DoMines ]
+                                                ]
+                                            , div [ class "buttons-container" ] 
+                                                [ button [ class "mine-button", ExtraMouse.onClick DoNew, disabled (errorMessage /= "") ] [ text "new" ]
+                                                ]
+                                            , div [ class "mine-input-message" ]
+                                                [ text errorMessage ]
+                                        ]
                                     ]
                                 ]
                         ]
@@ -334,10 +422,10 @@ view model =
 
 
 viewField : Model -> Int -> Field -> Html Msg
-viewField { fields } index { status, content } =
+viewField { fields, parameters } index { status, content } =
     let
-        adjacentMines = filterCountAdjacent index ( \field -> field.content == Mine ) fields
-        adjacentFlags = filterCountAdjacent index ( \field -> field.status == Flag ) fields
+        adjacentMines = filterCountAdjacent parameters index ( \field -> field.content == Mine ) fields
+        adjacentFlags = filterCountAdjacent parameters index ( \field -> field.status == Flag ) fields
     in
         case ( status, content ) of
             ( Close, Empty ) ->
@@ -351,29 +439,20 @@ viewField { fields } index { status, content } =
 
             ( Open, Empty ) ->
                 if adjacentMines == 0 then
-                    div [ class "field field-empty", ExtraMouse.onContextMenu DoNothing ] [ text "." ]
+                    div [ class "field field-empty", ExtraMouse.onContextMenu DoNothing ] [ text "" ]
                 else if adjacentMines == adjacentFlags then
                     div [ class "field field-empty" , ExtraMouse.onContextMenu ( OpenAdjacents index ) ] [ String.fromInt adjacentMines |> text ]
                 else
                     div [ class "field field-empty" , ExtraMouse.onContextMenu DoNothing ] [ String.fromInt adjacentMines |> text ]
 
             ( Open, Mine ) ->
-                div [ class "field field-mine" , ExtraMouse.onContextMenu DoNothing ] [ text "M" ]
+                div [ class "field field-mine" , ExtraMouse.onContextMenu DoNothing ] [ img [ src "src/resources/mine.png", width 20, height 20  ] [] ]
 
             ( Flag, _ ) ->
-                div [ class "field field-flag", ExtraMouse.onContextMenu ( UnFlagField index ) ] [ text "F" ]
+                div [ class "field field-flag", ExtraMouse.onContextMenu ( UnFlagField index ) ] [ img [ src "src/resources/flag1.png", width 20, height 20 ] [] ]
 
 
 -- UTILITY
-
-getRow : Int -> Int
-getRow index =
-        index // xSize
-
-
-getColumn : Int -> Int
-getColumn index =
-        modBy xSize index
 
 
 fieldIsOpen : Field -> Bool
@@ -390,9 +469,9 @@ fieldIsClosed { status } =
         _ -> False
 
         
-doAdjacent : Int -> ( Int -> Array.Array Field -> Array.Array Field ) -> Array.Array Field -> Array.Array Field
-doAdjacent index modelFunction fields =
-    getAdjacent index
+doAdjacent : Parameters -> Int -> ( Int -> Array.Array Field -> Array.Array Field ) -> Array.Array Field -> Array.Array Field
+doAdjacent parameters index modelFunction fields =
+    getAdjacent parameters index
     |> Array.foldl modelFunction fields
 
 
@@ -416,28 +495,31 @@ filterField fieldFilter ( _, field ) =
     fieldFilter field
 
 
-filterCountAdjacent : Int -> (Field -> Bool) -> Array.Array Field -> Int
-filterCountAdjacent index fieldFilter fields =
-    getAdjacent index
+filterCountAdjacent : Parameters -> Int -> (Field -> Bool) -> Array.Array Field -> Int
+filterCountAdjacent paramateres index fieldFilter fields =
+    getAdjacent paramateres index
     |> Array.toList
     |> List.filterMap ( \index1 -> Array.get index1 fields )
     |> List.filter fieldFilter
     |> List.length
 
 
-getAdjacent : Int -> Array.Array Int
-getAdjacent index =
-    Array.empty
-    |> ( if getRow index > 0 && getColumn index > 0                   then Array.push ( index - xSize - 1 ) else identity )
-    |> ( if getRow index > 0                                          then Array.push ( index - xSize ) else identity )
-    |> ( if getRow index > 0 && getColumn index + 1 < xSize           then Array.push ( index - xSize + 1 ) else identity )
+getAdjacent : Parameters -> Int -> Array.Array Int
+getAdjacent parameters index =
+    let 
+        { xSize, ySize } = parameters
+    in
+        Array.empty
+        |> ( if Parameters.getRow parameters index > 0 && Parameters.getColumn parameters index > 0                   then Array.push ( index - xSize - 1 ) else identity )
+        |> ( if Parameters.getRow parameters index > 0                                                                then Array.push ( index - xSize ) else identity )
+        |> ( if Parameters.getRow parameters index > 0 && Parameters.getColumn parameters index + 1 < xSize           then Array.push ( index - xSize + 1 ) else identity )
 
-    |> ( if getColumn index > 0                                       then Array.push ( index - 1 ) else identity )
-    |> ( if getColumn index + 1 < xSize                               then Array.push ( index + 1 ) else identity )
+        |> ( if Parameters.getColumn parameters index > 0                                                             then Array.push ( index - 1 ) else identity )
+        |> ( if Parameters.getColumn parameters index + 1 < xSize                                                     then Array.push ( index + 1 ) else identity )
 
-    |> ( if getRow index + 1 < ySize && getColumn index > 0           then Array.push ( index + xSize - 1 ) else identity )
-    |> ( if getRow index + 1 < ySize                                  then Array.push ( index + xSize ) else identity )
-    |> ( if getRow index + 1 < ySize && getColumn index + 1 < xSize   then Array.push ( index + xSize + 1 ) else identity )
+        |> ( if Parameters.getRow parameters index + 1 < ySize && Parameters.getColumn parameters index > 0           then Array.push ( index + xSize - 1 ) else identity )
+        |> ( if Parameters.getRow parameters index + 1 < ySize                                                        then Array.push ( index + xSize ) else identity )
+        |> ( if Parameters.getRow parameters index + 1 < ySize && Parameters.getColumn parameters index + 1 < xSize   then Array.push ( index + xSize + 1 ) else identity )
 
 
 getStatusReport : Array.Array Field -> { flags : Int, mineFlags : Int, openFields : Int }

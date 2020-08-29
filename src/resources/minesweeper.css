@@ -1,21 +1,28 @@
 :root {
-    --color-background-field-closed: hsl(40, 10%, 49%);
+    --color-background-field-closed: hsl(32, 50%, 50%);
     --color-background-field-empty: hsl(150, 50%, 50%);
     --color-background-field-mine: hsl(0, 90%, 50%);
     --color-background-field-flag: hsl(200, 75%, 50%);
 
     --color-field-empty: black;
 }
-
-div.info-container{
-}
 div.info-text {
     text-align: left;
     font-family: 'Courier New', Courier, monospace;
     font-size: small;
 }
-
-
+div.buttons-container {
+    float: right;
+}
+button.mine-button {
+    width: 80px;
+    height: 25px;
+    border-style: outset;
+    border-color: aliceblue;
+}
+button.mine-button:hover{
+    border-style: inset;
+}
 div.mine-container{
     position: absolute;
     display: block;
@@ -29,24 +36,60 @@ div.mine-grid {
 }
 
 div.field {
-    border-color: black;
     border: solid;
-    border-width: thin;
+    border-style: outset;
+    cursor: pointer;
+}
+div.field:hover {
+    border-style: inset;
 }
 div.field-closed {
+    /* border-color: var(--color-background-field-closed); */
     background-color: var(--color-background-field-closed);
 }
 
 div.field-empty {
+    /* border-color: var(--color-background-field-empty); */
     background-color: var(--color-background-field-empty);
     color: var(--color-field-empty);
 }
 
 div.field-mine {
+    /* border-color: var(--color-background-field-mine); */
     background-color: var(--color-background-field-mine);
 }
 
 div.field-flag {
+    /* border-color: var(--color-background-field-flag); */
     background-color: var(--color-background-field-flag);
 }
 
+div.mine-input {
+    float: left;
+}
+div.mine-input-new {
+    color: var(--color-background-field-mine);
+}
+
+div.mine-label {
+    width: 50px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: small;
+    float: left;
+    border: none;
+}
+input.mine-value {
+    width: 100px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: small;
+    border-radius: 0rem;
+    height: 20px;
+    border: none;
+}
+div.mine-input-message {
+    width: 100%;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: small;
+    float: left;
+    color: var(--color-background-field-mine);
+}

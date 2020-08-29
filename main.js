@@ -5343,6 +5343,11 @@ var $author$project$Main$Empty = {$: 'Empty'};
 var $author$project$Main$getField = function (index) {
 	return {content: $author$project$Main$Empty, status: $author$project$Main$Close};
 };
+var $author$project$Parameters$getSize = function (_v0) {
+	var xSize = _v0.xSize;
+	var ySize = _v0.ySize;
+	return xSize * ySize;
+};
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Basics$negate = function (n) {
 	return -n;
@@ -5385,10 +5390,12 @@ var $elm$random$Random$int = F2(
 				}
 			});
 	});
-var $author$project$Main$xSize = 20;
-var $author$project$Main$ySize = 20;
-var $author$project$Main$minesGenerator = A2($elm$random$Random$int, 0, ($author$project$Main$xSize * $author$project$Main$ySize) - 1);
-var $author$project$Main$numberOfMines = 10;
+var $author$project$Main$minesGenerator = function (parameters) {
+	return A2(
+		$elm$random$Random$int,
+		0,
+		$author$project$Parameters$getSize(parameters) - 1);
+};
 var $elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
 		repeatHelp:
@@ -5410,21 +5417,28 @@ var $elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var $author$project$Main$init = function (_v0) {
-	var fields = A2(
-		$elm$core$Array$initialize,
-		$author$project$Main$xSize * $author$project$Main$ySize,
-		function (index) {
-			return $author$project$Main$getField(index);
-		});
-	return _Utils_Tuple2(
-		{fields: fields},
-		$elm$core$Platform$Cmd$batch(
-			A2(
-				$elm$core$List$repeat,
-				$author$project$Main$numberOfMines,
-				A2($elm$random$Random$generate, $author$project$Main$SetRandomMine, $author$project$Main$minesGenerator))));
-};
+var $author$project$Main$init = F2(
+	function (parameters, _v0) {
+		var fields = A2(
+			$elm$core$Array$initialize,
+			$author$project$Parameters$getSize(parameters),
+			function (index) {
+				return $author$project$Main$getField(index);
+			});
+		var _v1 = parameters;
+		var mines = _v1.mines;
+		return _Utils_Tuple2(
+			{fields: fields, parameters: parameters, parametersNew: parameters},
+			$elm$core$Platform$Cmd$batch(
+				A2(
+					$elm$core$List$repeat,
+					mines,
+					A2(
+						$elm$random$Random$generate,
+						$author$project$Main$SetRandomMine,
+						$author$project$Main$minesGenerator(parameters)))));
+	});
+var $author$project$Parameters$init = {mines: 50, xSize: 20, ySize: 20};
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
@@ -5432,6 +5446,41 @@ var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$none;
 };
 var $author$project$Main$Mine = {$: 'Mine'};
+var $elm$core$Elm$JsArray$map = _JsArray_map;
+var $elm$core$Array$map = F2(
+	function (func, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = function (node) {
+			if (node.$ === 'SubTree') {
+				var subTree = node.a;
+				return $elm$core$Array$SubTree(
+					A2($elm$core$Elm$JsArray$map, helper, subTree));
+			} else {
+				var values = node.a;
+				return $elm$core$Array$Leaf(
+					A2($elm$core$Elm$JsArray$map, func, values));
+			}
+		};
+		return A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A2($elm$core$Elm$JsArray$map, helper, tree),
+			A2($elm$core$Elm$JsArray$map, func, tail));
+	});
+var $author$project$Main$doClearFields = function (fields) {
+	return A2(
+		$elm$core$Array$map,
+		function (field) {
+			return _Utils_update(
+				field,
+				{status: $author$project$Main$Close});
+		},
+		fields);
+};
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -5570,12 +5619,16 @@ var $elm$core$Array$foldl = F3(
 			tail);
 	});
 var $elm$core$Basics$modBy = _Basics_modBy;
-var $author$project$Main$getColumn = function (index) {
-	return A2($elm$core$Basics$modBy, $author$project$Main$xSize, index);
-};
-var $author$project$Main$getRow = function (index) {
-	return (index / $author$project$Main$xSize) | 0;
-};
+var $author$project$Parameters$getColumn = F2(
+	function (_v0, index) {
+		var xSize = _v0.xSize;
+		return A2($elm$core$Basics$modBy, xSize, index);
+	});
+var $author$project$Parameters$getRow = F2(
+	function (_v0, index) {
+		var xSize = _v0.xSize;
+		return (index / xSize) | 0;
+	});
 var $elm$core$Elm$JsArray$push = _JsArray_push;
 var $elm$core$Elm$JsArray$singleton = _JsArray_singleton;
 var $elm$core$Array$insertTailInTree = F4(
@@ -5654,35 +5707,39 @@ var $elm$core$Array$push = F2(
 			A2($elm$core$Elm$JsArray$push, a, tail),
 			array);
 	});
-var $author$project$Main$getAdjacent = function (index) {
-	return (((_Utils_cmp(
-		$author$project$Main$getRow(index) + 1,
-		$author$project$Main$ySize) < 0) && (_Utils_cmp(
-		$author$project$Main$getColumn(index) + 1,
-		$author$project$Main$xSize) < 0)) ? $elm$core$Array$push((index + $author$project$Main$xSize) + 1) : $elm$core$Basics$identity)(
-		((_Utils_cmp(
-			$author$project$Main$getRow(index) + 1,
-			$author$project$Main$ySize) < 0) ? $elm$core$Array$push(index + $author$project$Main$xSize) : $elm$core$Basics$identity)(
-			(((_Utils_cmp(
-				$author$project$Main$getRow(index) + 1,
-				$author$project$Main$ySize) < 0) && ($author$project$Main$getColumn(index) > 0)) ? $elm$core$Array$push((index + $author$project$Main$xSize) - 1) : $elm$core$Basics$identity)(
-				((_Utils_cmp(
-					$author$project$Main$getColumn(index) + 1,
-					$author$project$Main$xSize) < 0) ? $elm$core$Array$push(index + 1) : $elm$core$Basics$identity)(
-					(($author$project$Main$getColumn(index) > 0) ? $elm$core$Array$push(index - 1) : $elm$core$Basics$identity)(
-						((($author$project$Main$getRow(index) > 0) && (_Utils_cmp(
-							$author$project$Main$getColumn(index) + 1,
-							$author$project$Main$xSize) < 0)) ? $elm$core$Array$push((index - $author$project$Main$xSize) + 1) : $elm$core$Basics$identity)(
-							(($author$project$Main$getRow(index) > 0) ? $elm$core$Array$push(index - $author$project$Main$xSize) : $elm$core$Basics$identity)(
-								((($author$project$Main$getRow(index) > 0) && ($author$project$Main$getColumn(index) > 0)) ? $elm$core$Array$push((index - $author$project$Main$xSize) - 1) : $elm$core$Basics$identity)($elm$core$Array$empty))))))));
-};
-var $author$project$Main$doAdjacent = F3(
-	function (index, modelFunction, fields) {
+var $author$project$Main$getAdjacent = F2(
+	function (parameters, index) {
+		var _v0 = parameters;
+		var xSize = _v0.xSize;
+		var ySize = _v0.ySize;
+		return (((_Utils_cmp(
+			A2($author$project$Parameters$getRow, parameters, index) + 1,
+			ySize) < 0) && (_Utils_cmp(
+			A2($author$project$Parameters$getColumn, parameters, index) + 1,
+			xSize) < 0)) ? $elm$core$Array$push((index + xSize) + 1) : $elm$core$Basics$identity)(
+			((_Utils_cmp(
+				A2($author$project$Parameters$getRow, parameters, index) + 1,
+				ySize) < 0) ? $elm$core$Array$push(index + xSize) : $elm$core$Basics$identity)(
+				(((_Utils_cmp(
+					A2($author$project$Parameters$getRow, parameters, index) + 1,
+					ySize) < 0) && (A2($author$project$Parameters$getColumn, parameters, index) > 0)) ? $elm$core$Array$push((index + xSize) - 1) : $elm$core$Basics$identity)(
+					((_Utils_cmp(
+						A2($author$project$Parameters$getColumn, parameters, index) + 1,
+						xSize) < 0) ? $elm$core$Array$push(index + 1) : $elm$core$Basics$identity)(
+						((A2($author$project$Parameters$getColumn, parameters, index) > 0) ? $elm$core$Array$push(index - 1) : $elm$core$Basics$identity)(
+							(((A2($author$project$Parameters$getRow, parameters, index) > 0) && (_Utils_cmp(
+								A2($author$project$Parameters$getColumn, parameters, index) + 1,
+								xSize) < 0)) ? $elm$core$Array$push((index - xSize) + 1) : $elm$core$Basics$identity)(
+								((A2($author$project$Parameters$getRow, parameters, index) > 0) ? $elm$core$Array$push(index - xSize) : $elm$core$Basics$identity)(
+									(((A2($author$project$Parameters$getRow, parameters, index) > 0) && (A2($author$project$Parameters$getColumn, parameters, index) > 0)) ? $elm$core$Array$push((index - xSize) - 1) : $elm$core$Basics$identity)($elm$core$Array$empty))))))));
+	});
+var $author$project$Main$doAdjacent = F4(
+	function (parameters, index, modelFunction, fields) {
 		return A3(
 			$elm$core$Array$foldl,
 			modelFunction,
 			fields,
-			$author$project$Main$getAdjacent(index));
+			A2($author$project$Main$getAdjacent, parameters, index));
 	});
 var $author$project$Main$Open = {$: 'Open'};
 var $author$project$Main$doOpenField = F2(
@@ -5730,8 +5787,8 @@ var $elm$core$List$filterMap = F2(
 			_List_Nil,
 			xs);
 	});
-var $author$project$Main$filterCountAdjacent = F3(
-	function (index, fieldFilter, fields) {
+var $author$project$Main$filterCountAdjacent = F4(
+	function (paramateres, index, fieldFilter, fields) {
 		return $elm$core$List$length(
 			A2(
 				$elm$core$List$filter,
@@ -5742,10 +5799,10 @@ var $author$project$Main$filterCountAdjacent = F3(
 						return A2($elm$core$Array$get, index1, fields);
 					},
 					$elm$core$Array$toList(
-						$author$project$Main$getAdjacent(index)))));
+						A2($author$project$Main$getAdjacent, paramateres, index)))));
 	});
-var $author$project$Main$doOpenFieldAndAdjacents = F2(
-	function (index, fields) {
+var $author$project$Main$doOpenFieldAndAdjacents = F3(
+	function (parameters, index, fields) {
 		var _v0 = A2($elm$core$Array$get, index, fields);
 		if (_v0.$ === 'Nothing') {
 			return fields;
@@ -5756,17 +5813,19 @@ var $author$project$Main$doOpenFieldAndAdjacents = F2(
 				if (_v1.b.$ === 'Empty') {
 					var _v2 = _v1.a;
 					var _v3 = _v1.b;
-					var adjacentMines = A3(
+					var adjacentMines = A4(
 						$author$project$Main$filterCountAdjacent,
+						parameters,
 						index,
 						function (field1) {
 							return _Utils_eq(field1.content, $author$project$Main$Mine);
 						},
 						fields);
-					return (!adjacentMines) ? A3(
+					return (!adjacentMines) ? A4(
 						$author$project$Main$doAdjacent,
+						parameters,
 						index,
-						$author$project$Main$doOpenFieldAndAdjacents,
+						$author$project$Main$doOpenFieldAndAdjacents(parameters),
 						A2($author$project$Main$doOpenField, index, fields)) : A2($author$project$Main$doOpenField, index, fields);
 				} else {
 					var _v4 = _v1.a;
@@ -5777,9 +5836,14 @@ var $author$project$Main$doOpenFieldAndAdjacents = F2(
 			}
 		}
 	});
-var $author$project$Main$doOpenAdjacents = F2(
-	function (index, fields) {
-		return A3($author$project$Main$doAdjacent, index, $author$project$Main$doOpenFieldAndAdjacents, fields);
+var $author$project$Main$doOpenAdjacents = F3(
+	function (parameters, index, fields) {
+		return A4(
+			$author$project$Main$doAdjacent,
+			parameters,
+			index,
+			$author$project$Main$doOpenFieldAndAdjacents(parameters),
+			fields);
 	});
 var $author$project$Main$doUnFlagField = F2(
 	function (index, fields) {
@@ -5808,6 +5872,8 @@ var $author$project$Main$update = F2(
 	function (msg, model) {
 		var _v0 = model;
 		var fields = _v0.fields;
+		var parameters = _v0.parameters;
+		var parametersNew = _v0.parametersNew;
 		switch (msg.$) {
 			case 'OpenField':
 				var index = msg.a;
@@ -5876,7 +5942,7 @@ var $author$project$Main$update = F2(
 						A2(
 							$author$project$Main$setFields,
 							model,
-							A2($author$project$Main$doOpenFieldAndAdjacents, index, fields)),
+							A3($author$project$Main$doOpenFieldAndAdjacents, parameters, index, fields)),
 						$elm$core$Platform$Cmd$none);
 				}
 			case 'OpenAdjacents':
@@ -5890,13 +5956,16 @@ var $author$project$Main$update = F2(
 						A2(
 							$author$project$Main$setFields,
 							model,
-							A2($author$project$Main$doOpenAdjacents, index, fields)),
+							A3($author$project$Main$doOpenAdjacents, parameters, index, fields)),
 						$elm$core$Platform$Cmd$none);
 				}
 			case 'PickRandomIndex':
 				return _Utils_Tuple2(
 					model,
-					A2($elm$random$Random$generate, $author$project$Main$SetRandomMine, $author$project$Main$minesGenerator));
+					A2(
+						$elm$random$Random$generate,
+						$author$project$Main$SetRandomMine,
+						$author$project$Main$minesGenerator(parameters)));
 			case 'SetRandomMine':
 				var index = msg.a;
 				var _v8 = A2($elm$core$Array$get, index, fields);
@@ -5908,7 +5977,10 @@ var $author$project$Main$update = F2(
 					if (_v9.$ === 'Mine') {
 						return _Utils_Tuple2(
 							model,
-							A2($elm$random$Random$generate, $author$project$Main$SetRandomMine, $author$project$Main$minesGenerator));
+							A2(
+								$elm$random$Random$generate,
+								$author$project$Main$SetRandomMine,
+								$author$project$Main$minesGenerator(parameters)));
 					} else {
 						return _Utils_Tuple2(
 							_Utils_update(
@@ -5925,10 +5997,91 @@ var $author$project$Main$update = F2(
 							$elm$core$Platform$Cmd$none);
 					}
 				}
-			default:
+			case 'DoNothing':
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'DoClear':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							fields: $author$project$Main$doClearFields(fields),
+							parametersNew: parameters
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'DoNew':
+				return A2($author$project$Main$init, parametersNew, '');
+			case 'DoXsize':
+				var newSize = msg.a;
+				var _v10 = $elm$core$String$toInt(newSize);
+				if (_v10.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var size = _v10.a;
+					var parameters1 = _Utils_update(
+						parametersNew,
+						{xSize: size});
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{parametersNew: parameters1}),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'DoYsize':
+				var newSize = msg.a;
+				var _v11 = $elm$core$String$toInt(newSize);
+				if (_v11.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var size = _v11.a;
+					var parameters1 = _Utils_update(
+						parametersNew,
+						{ySize: size});
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{parametersNew: parameters1}),
+						$elm$core$Platform$Cmd$none);
+				}
+			default:
+				var newSize = msg.a;
+				var _v12 = $elm$core$String$toInt(newSize);
+				if (_v12.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var size = _v12.a;
+					var parameters1 = _Utils_update(
+						parametersNew,
+						{mines: size});
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{parametersNew: parameters1}),
+						$elm$core$Platform$Cmd$none);
+				}
 		}
 	});
+var $author$project$Main$DoClear = function (a) {
+	return {$: 'DoClear', a: a};
+};
+var $author$project$Main$DoMines = function (a) {
+	return {$: 'DoMines', a: a};
+};
+var $author$project$Main$DoNew = function (a) {
+	return {$: 'DoNew', a: a};
+};
+var $author$project$Main$DoXsize = function (a) {
+	return {$: 'DoXsize', a: a};
+};
+var $author$project$Main$DoYsize = function (a) {
+	return {$: 'DoYsize', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$Attrs = function (a) {
+	return {$: 'Attrs', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$attrs = function (attrs_) {
+	return $rundis$elm_bootstrap$Bootstrap$Form$Input$Attrs(attrs_);
+};
+var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5938,6 +6091,15 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Main$getStatusReport = function (fields) {
 	return A3(
@@ -5977,68 +6139,267 @@ var $author$project$Main$getStatusReport = function (fields) {
 		{flags: 0, mineFlags: 0, openFields: 0},
 		fields);
 };
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$html$Html$Attributes$href = function (url) {
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$Number = {$: 'Number'};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$Input = function (a) {
+	return {$: 'Input', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$Type = function (a) {
+	return {$: 'Type', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$create = F2(
+	function (tipe, options) {
+		return $rundis$elm_bootstrap$Bootstrap$Form$Input$Input(
+			{
+				options: A2(
+					$elm$core$List$cons,
+					$rundis$elm_bootstrap$Bootstrap$Form$Input$Type(tipe),
+					options)
+			});
+	});
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$applyModifier = F2(
+	function (modifier, options) {
+		switch (modifier.$) {
+			case 'Size':
+				var size_ = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						size: $elm$core$Maybe$Just(size_)
+					});
+			case 'Id':
+				var id_ = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						id: $elm$core$Maybe$Just(id_)
+					});
+			case 'Type':
+				var tipe = modifier.a;
+				return _Utils_update(
+					options,
+					{tipe: tipe});
+			case 'Disabled':
+				var val = modifier.a;
+				return _Utils_update(
+					options,
+					{disabled: val});
+			case 'Value':
+				var value_ = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						value: $elm$core$Maybe$Just(value_)
+					});
+			case 'Placeholder':
+				var value_ = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						placeholder: $elm$core$Maybe$Just(value_)
+					});
+			case 'OnInput':
+				var onInput_ = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						onInput: $elm$core$Maybe$Just(onInput_)
+					});
+			case 'Validation':
+				var validation_ = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						validation: $elm$core$Maybe$Just(validation_)
+					});
+			case 'Readonly':
+				var val = modifier.a;
+				return _Utils_update(
+					options,
+					{readonly: val});
+			case 'PlainText':
+				var val = modifier.a;
+				return _Utils_update(
+					options,
+					{plainText: val});
+			default:
+				var attrs_ = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						attributes: _Utils_ap(options.attributes, attrs_)
+					});
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$Text = {$: 'Text'};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$defaultOptions = {attributes: _List_Nil, disabled: false, id: $elm$core$Maybe$Nothing, onInput: $elm$core$Maybe$Nothing, placeholder: $elm$core$Maybe$Nothing, plainText: false, readonly: false, size: $elm$core$Maybe$Nothing, tipe: $rundis$elm_bootstrap$Bootstrap$Form$Input$Text, validation: $elm$core$Maybe$Nothing, value: $elm$core$Maybe$Nothing};
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
 	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
-var $elm$virtual_dom$VirtualDom$node = function (tag) {
-	return _VirtualDom_node(
-		_VirtualDom_noScript(tag));
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$html$Html$Attributes$readonly = $elm$html$Html$Attributes$boolProperty('readOnly');
+var $rundis$elm_bootstrap$Bootstrap$General$Internal$screenSizeOption = function (size) {
+	switch (size.$) {
+		case 'XS':
+			return $elm$core$Maybe$Nothing;
+		case 'SM':
+			return $elm$core$Maybe$Just('sm');
+		case 'MD':
+			return $elm$core$Maybe$Just('md');
+		case 'LG':
+			return $elm$core$Maybe$Just('lg');
+		default:
+			return $elm$core$Maybe$Just('xl');
+	}
 };
-var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
-var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
-var $rundis$elm_bootstrap$Bootstrap$CDN$stylesheet = A3(
-	$elm$html$Html$node,
-	'link',
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$rel('stylesheet'),
-			$elm$html$Html$Attributes$href('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
-		]),
-	_List_Nil);
-var $author$project$MinesweeperCDN$stylesheet = A3(
-	$elm$html$Html$node,
-	'link',
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$rel('stylesheet'),
-			$elm$html$Html$Attributes$href('src/resources/minesweeper.css')
-		]),
-	_List_Nil);
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$DoNothing = function (a) {
-	return {$: 'DoNothing', a: a};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$sizeAttribute = function (size) {
+	return A2(
+		$elm$core$Maybe$map,
+		function (s) {
+			return $elm$html$Html$Attributes$class('form-control-' + s);
+		},
+		$rundis$elm_bootstrap$Bootstrap$General$Internal$screenSizeOption(size));
 };
-var $author$project$Main$FlagField = F2(
-	function (a, b) {
-		return {$: 'FlagField', a: a, b: b};
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$typeAttribute = function (inputType) {
+	return $elm$html$Html$Attributes$type_(
+		function () {
+			switch (inputType.$) {
+				case 'Text':
+					return 'text';
+				case 'Password':
+					return 'password';
+				case 'DatetimeLocal':
+					return 'datetime-local';
+				case 'Date':
+					return 'date';
+				case 'Month':
+					return 'month';
+				case 'Time':
+					return 'time';
+				case 'Week':
+					return 'week';
+				case 'Number':
+					return 'number';
+				case 'Email':
+					return 'email';
+				case 'Url':
+					return 'url';
+				case 'Search':
+					return 'search';
+				case 'Tel':
+					return 'tel';
+				default:
+					return 'color';
+			}
+		}());
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$FormInternal$validationToString = function (validation) {
+	if (validation.$ === 'Success') {
+		return 'is-valid';
+	} else {
+		return 'is-invalid';
+	}
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$validationAttribute = function (validation) {
+	return $elm$html$Html$Attributes$class(
+		$rundis$elm_bootstrap$Bootstrap$Form$FormInternal$validationToString(validation));
+};
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$toAttributes = function (modifiers) {
+	var options = A3($elm$core$List$foldl, $rundis$elm_bootstrap$Bootstrap$Form$Input$applyModifier, $rundis$elm_bootstrap$Bootstrap$Form$Input$defaultOptions, modifiers);
+	return _Utils_ap(
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class(
+				options.plainText ? 'form-control-plaintext' : 'form-control'),
+				$elm$html$Html$Attributes$disabled(options.disabled),
+				$elm$html$Html$Attributes$readonly(options.readonly || options.plainText),
+				$rundis$elm_bootstrap$Bootstrap$Form$Input$typeAttribute(options.tipe)
+			]),
+		_Utils_ap(
+			A2(
+				$elm$core$List$filterMap,
+				$elm$core$Basics$identity,
+				_List_fromArray(
+					[
+						A2($elm$core$Maybe$map, $elm$html$Html$Attributes$id, options.id),
+						A2($elm$core$Maybe$andThen, $rundis$elm_bootstrap$Bootstrap$Form$Input$sizeAttribute, options.size),
+						A2($elm$core$Maybe$map, $elm$html$Html$Attributes$value, options.value),
+						A2($elm$core$Maybe$map, $elm$html$Html$Attributes$placeholder, options.placeholder),
+						A2($elm$core$Maybe$map, $elm$html$Html$Events$onInput, options.onInput),
+						A2($elm$core$Maybe$map, $rundis$elm_bootstrap$Bootstrap$Form$Input$validationAttribute, options.validation)
+					])),
+			options.attributes));
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$view = function (_v0) {
+	var options = _v0.a.options;
+	return A2(
+		$elm$html$Html$input,
+		$rundis$elm_bootstrap$Bootstrap$Form$Input$toAttributes(options),
+		_List_Nil);
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$input = F2(
+	function (tipe, options) {
+		return $rundis$elm_bootstrap$Bootstrap$Form$Input$view(
+			A2($rundis$elm_bootstrap$Bootstrap$Form$Input$create, tipe, options));
 	});
-var $author$project$Main$OpenAdjacents = F2(
-	function (a, b) {
-		return {$: 'OpenAdjacents', a: a, b: b};
-	});
-var $author$project$Main$OpenField = F2(
-	function (a, b) {
-		return {$: 'OpenField', a: a, b: b};
-	});
-var $author$project$Main$OpenFieldAndAdjacents = F2(
-	function (a, b) {
-		return {$: 'OpenFieldAndAdjacents', a: a, b: b};
-	});
-var $author$project$Main$UnFlagField = F2(
-	function (a, b) {
-		return {$: 'UnFlagField', a: a, b: b};
-	});
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$number = $rundis$elm_bootstrap$Bootstrap$Form$Input$input($rundis$elm_bootstrap$Bootstrap$Form$Input$Number);
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions = {preventDefault: true, stopPropagation: false};
 var $elm$virtual_dom$VirtualDom$Custom = function (a) {
 	return {$: 'Custom', a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$custom = F2(
 	function (event, decoder) {
 		return A2(
@@ -6072,7 +6433,6 @@ var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$buttonFromId = functi
 			return $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$ErrorButton;
 	}
 };
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$buttonDecoder = A2(
 	$elm$json$Json$Decode$map,
@@ -6142,21 +6502,150 @@ var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions = F3(
 				$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$eventDecoder));
 	});
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions, 'click', $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions);
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$OnInput = function (a) {
+	return {$: 'OnInput', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$onInput = function (toMsg) {
+	return $rundis$elm_bootstrap$Bootstrap$Form$Input$OnInput(toMsg);
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
+var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
+var $rundis$elm_bootstrap$Bootstrap$CDN$stylesheet = A3(
+	$elm$html$Html$node,
+	'link',
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$rel('stylesheet'),
+			$elm$html$Html$Attributes$href('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
+		]),
+	_List_Nil);
+var $author$project$MinesweeperCDN$stylesheet = A3(
+	$elm$html$Html$node,
+	'link',
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$rel('stylesheet'),
+			$elm$html$Html$Attributes$href('src/resources/minesweeper.css')
+		]),
+	_List_Nil);
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Parameters$maybeChainer = F2(
+	function (ma1, ma2) {
+		if (ma2.$ === 'Nothing') {
+			return ma1;
+		} else {
+			var a1 = ma2.a;
+			return $elm$core$Maybe$Just(a1);
+		}
+	});
+var $author$project$Parameters$maxMines = F2(
+	function (x, y) {
+		return ((x * y) / 2) | 0;
+	});
+var $author$project$Parameters$validateMines = F3(
+	function (x, y, m) {
+		var minimum = 0;
+		var maximum = A2($author$project$Parameters$maxMines, x, y);
+		return ((_Utils_cmp(minimum, m) < 1) && (_Utils_cmp(m, maximum) < 1)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+			'Choose mines between ' + ($elm$core$String$fromInt(minimum) + (' and ' + $elm$core$String$fromInt(maximum))));
+	});
+var $author$project$Parameters$maxSize = 300;
+var $author$project$Parameters$minSize = 3;
+var $author$project$Parameters$validateSize = function (size) {
+	return ((_Utils_cmp($author$project$Parameters$minSize, size) < 1) && (_Utils_cmp(size, $author$project$Parameters$maxSize) < 1)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+		'Choose a size between ' + ($elm$core$String$fromInt($author$project$Parameters$minSize) + (' and ' + $elm$core$String$fromInt($author$project$Parameters$maxSize))));
+};
+var $author$project$Parameters$validate = function (_v0) {
+	var xSize = _v0.xSize;
+	var ySize = _v0.ySize;
+	var mines = _v0.mines;
+	return A2(
+		$author$project$Parameters$maybeChainer,
+		A3($author$project$Parameters$validateMines, xSize, ySize, mines),
+		A2(
+			$author$project$Parameters$maybeChainer,
+			$author$project$Parameters$validateSize(ySize),
+			$author$project$Parameters$validateSize(xSize)));
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$Value = function (a) {
+	return {$: 'Value', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Form$Input$value = function (value_) {
+	return $rundis$elm_bootstrap$Bootstrap$Form$Input$Value(value_);
+};
+var $author$project$Main$DoNothing = function (a) {
+	return {$: 'DoNothing', a: a};
+};
+var $author$project$Main$FlagField = F2(
+	function (a, b) {
+		return {$: 'FlagField', a: a, b: b};
+	});
+var $author$project$Main$OpenAdjacents = F2(
+	function (a, b) {
+		return {$: 'OpenAdjacents', a: a, b: b};
+	});
+var $author$project$Main$OpenField = F2(
+	function (a, b) {
+		return {$: 'OpenField', a: a, b: b};
+	});
+var $author$project$Main$OpenFieldAndAdjacents = F2(
+	function (a, b) {
+		return {$: 'OpenFieldAndAdjacents', a: a, b: b};
+	});
+var $author$project$Main$UnFlagField = F2(
+	function (a, b) {
+		return {$: 'UnFlagField', a: a, b: b};
+	});
+var $elm$html$Html$Attributes$height = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'height',
+		$elm$core$String$fromInt(n));
+};
+var $elm$html$Html$img = _VirtualDom_node('img');
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onContextMenu = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onWithOptions, 'contextmenu', $mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$defaultOptions);
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var $elm$html$Html$Attributes$width = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'width',
+		$elm$core$String$fromInt(n));
+};
 var $author$project$Main$viewField = F3(
 	function (_v0, index, _v1) {
 		var fields = _v0.fields;
+		var parameters = _v0.parameters;
 		var status = _v1.status;
 		var content = _v1.content;
-		var adjacentMines = A3(
+		var adjacentMines = A4(
 			$author$project$Main$filterCountAdjacent,
+			parameters,
 			index,
 			function (field) {
 				return _Utils_eq(field.content, $author$project$Main$Mine);
 			},
 			fields);
-		var adjacentFlags = A3(
+		var adjacentFlags = A4(
 			$author$project$Main$filterCountAdjacent,
+			parameters,
 			index,
 			function (field) {
 				return _Utils_eq(field.status, $author$project$Main$Flag);
@@ -6226,7 +6715,7 @@ var $author$project$Main$viewField = F3(
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('.')
+								$elm$html$Html$text('')
 							])) : (_Utils_eq(adjacentMines, adjacentFlags) ? A2(
 						$elm$html$Html$div,
 						_List_fromArray(
@@ -6263,7 +6752,15 @@ var $author$project$Main$viewField = F3(
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('M')
+								A2(
+								$elm$html$Html$img,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$src('src/resources/mine.png'),
+										$elm$html$Html$Attributes$width(20),
+										$elm$html$Html$Attributes$height(20)
+									]),
+								_List_Nil)
 							]));
 				}
 			default:
@@ -6278,15 +6775,43 @@ var $author$project$Main$viewField = F3(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('F')
+							A2(
+							$elm$html$Html$img,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$src('src/resources/flag1.png'),
+									$elm$html$Html$Attributes$width(20),
+									$elm$html$Html$Attributes$height(20)
+								]),
+							_List_Nil)
 						]));
 		}
 	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Main$view = function (model) {
-	var _v0 = $author$project$Main$getStatusReport(model.fields);
-	var flags = _v0.flags;
-	var mineFlags = _v0.mineFlags;
-	var openFields = _v0.openFields;
+	var _v0 = model;
+	var parametersNew = _v0.parametersNew;
+	var parameters = _v0.parameters;
+	var errorMessage = A2(
+		$elm$core$Maybe$withDefault,
+		'',
+		$author$project$Parameters$validate(parametersNew));
+	var _v1 = $author$project$Main$getStatusReport(model.fields);
+	var flags = _v1.flags;
+	var mineFlags = _v1.mineFlags;
+	var openFields = _v1.openFields;
+	var _v2 = model.parameters;
+	var xSize = _v2.xSize;
+	var ySize = _v2.ySize;
+	var mines = _v2.mines;
 	return {
 		body: _List_fromArray(
 			[
@@ -6300,19 +6825,19 @@ var $author$project$Main$view = function (model) {
 						A2(
 						$elm$html$Html$Attributes$style,
 						'width',
-						$elm$core$String$fromInt($author$project$Main$xSize * 32) + 'px'),
+						$elm$core$String$fromInt(xSize * 30) + 'px'),
 						A2(
 						$elm$html$Html$Attributes$style,
 						'height',
-						$elm$core$String$fromInt($author$project$Main$ySize * 32) + 'px'),
+						$elm$core$String$fromInt(ySize * 30) + 'px'),
 						A2(
 						$elm$html$Html$Attributes$style,
 						'margin-left',
-						$elm$core$String$fromInt((($author$project$Main$xSize * 32) / (-2)) | 0) + 'px'),
+						$elm$core$String$fromInt(((xSize * 30) / (-2)) | 0) + 'px'),
 						A2(
 						$elm$html$Html$Attributes$style,
 						'margin-top',
-						$elm$core$String$fromInt((($author$project$Main$ySize * 32) / (-2)) | 0) + 'px')
+						$elm$core$String$fromInt(((ySize * 30) / (-2)) | 0) + 'px')
 					]),
 				_List_fromArray(
 					[
@@ -6338,7 +6863,27 @@ var $author$project$Main$view = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$text(
-												$elm$core$String$fromInt(openFields) + ('/' + ($elm$core$String$fromInt($author$project$Main$xSize * $author$project$Main$ySize) + (' fields, ' + ($elm$core$String$fromInt(mineFlags) + ('/' + ($elm$core$String$fromInt($author$project$Main$numberOfMines) + ' mines')))))))
+												$elm$core$String$fromInt(openFields) + ('/' + ($elm$core$String$fromInt(xSize * ySize) + (' fields, ' + ($elm$core$String$fromInt(mineFlags) + ('/' + ($elm$core$String$fromInt(mines) + ' mines'))))))),
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('buttons-container')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-button'),
+																$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick($author$project$Main$DoClear)
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('clear')
+															]))
+													]))
 											])),
 										A2(
 										$elm$html$Html$div,
@@ -6348,16 +6893,161 @@ var $author$project$Main$view = function (model) {
 												A2(
 												$elm$html$Html$Attributes$style,
 												'grid-template-columns',
-												'repeat(' + ($elm$core$String$fromInt($author$project$Main$xSize) + ', 30px )')),
+												'repeat(' + ($elm$core$String$fromInt(xSize) + ', 30px )')),
 												A2(
 												$elm$html$Html$Attributes$style,
 												'grid-template-rows',
-												'repeat(' + ($elm$core$String$fromInt($author$project$Main$ySize) + ', 30px )'))
+												'repeat(' + ($elm$core$String$fromInt(ySize) + ', 30px )'))
 											]),
 										A2(
 											$elm$core$List$indexedMap,
 											$author$project$Main$viewField(model),
-											$elm$core$Array$toList(model.fields)))
+											$elm$core$Array$toList(model.fields))),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('info-text')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$div,
+												_Utils_eq(parametersNew.xSize, parameters.xSize) ? _List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mine-input')
+													]) : _List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mine-input'),
+														$elm$html$Html$Attributes$class('mine-input-new')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$div,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-label')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('x size')
+															])),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
+														_List_fromArray(
+															[
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
+																$elm$core$String$fromInt(parametersNew.xSize)),
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('mine-value')
+																	])),
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoXsize)
+															]))
+													])),
+												A2(
+												$elm$html$Html$div,
+												_Utils_eq(parametersNew.ySize, parameters.ySize) ? _List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mine-input')
+													]) : _List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mine-input'),
+														$elm$html$Html$Attributes$class('mine-input-new')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$div,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-label')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('y size')
+															])),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
+														_List_fromArray(
+															[
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
+																$elm$core$String$fromInt(parametersNew.ySize)),
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('mine-value')
+																	])),
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoYsize)
+															]))
+													])),
+												A2(
+												$elm$html$Html$div,
+												_Utils_eq(parametersNew.mines, parameters.mines) ? _List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mine-input')
+													]) : _List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mine-input'),
+														$elm$html$Html$Attributes$class('mine-input-new')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$div,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-label')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('mines')
+															])),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
+														_List_fromArray(
+															[
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
+																$elm$core$String$fromInt(parametersNew.mines)),
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('mine-value')
+																	])),
+																$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoMines)
+															]))
+													])),
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('buttons-container')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-button'),
+																$mpizenberg$elm_pointer_events$Html$Events$Extra$Mouse$onClick($author$project$Main$DoNew),
+																$elm$html$Html$Attributes$disabled(errorMessage !== '')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('new')
+															]))
+													])),
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mine-input-message')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text(errorMessage)
+													]))
+											]))
 									]))
 							]))
 					]))
@@ -6366,5 +7056,10 @@ var $author$project$Main$view = function (model) {
 	};
 };
 var $author$project$Main$main = $elm$browser$Browser$document(
-	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
+	{
+		init: $author$project$Main$init($author$project$Parameters$init),
+		subscriptions: $author$project$Main$subscriptions,
+		update: $author$project$Main$update,
+		view: $author$project$Main$view
+	});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$string)(0)}});}(this));
