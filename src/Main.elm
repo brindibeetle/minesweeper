@@ -366,55 +366,56 @@ view model =
                     CDN.stylesheet
                     , MinesweeperCDN.stylesheet
                     , div 
-                        [ class "mine-container" 
-                        , style "width" ( ( String.fromInt ( xSize * 30 ) ) ++ "px" )
-                        , style "height" ( ( String.fromInt ( ySize * 30 ) ) ++ "px" )
-                        , style "margin-left" ( ( String.fromInt ( xSize * 30 // -2 )) ++ "px" )
-                        , style "margin-top" ( ( String.fromInt ( ySize * 30 // -2 )) ++ "px" )
+                        [ style "width"         ( ( String.fromInt ( xSize * 30 ) ) ++ "px" )
+                        , style "margin-left"   ( ( String.fromInt ( xSize * 30 // -2 )) ++ "px" )
+                        , style "position"      "absolute"
+                        , style "display"       "block"
+                        , style "left"          "50%"
+                        , style "top"           "100px"   
                         ]
-                        [ div
-                                []
-                                [ div 
-                                    [ class "info-container" ] 
-                                    [ div 
-                                        [ class "info-text" ]
-                                        [ 
-                                            text ( String.fromInt openFields ++ "/" ++ String.fromInt ( xSize * ySize ) ++ " fields, " 
-                                                ++ String.fromInt mineFlags ++ "/" ++ String.fromInt mines ++ " mines" )
-                                            , div [ class "buttons-container" ] 
-                                                [ button [ class "mine-button", ExtraMouse.onClick DoClear ] [ text "clear" ]
-                                                ]
-                                        ]
-                                    , div 
-                                        [ class "mine-grid"
-                                        , style "grid-template-columns" ( "repeat(" ++ ( String.fromInt xSize ) ++ ", 30px )" ) 
-                                        , style "grid-template-rows" ( "repeat(" ++ ( String.fromInt ySize ) ++ ", 30px )" ) 
-                                        ]
-                                        ( Array.toList model.fields
-                                        |> List.indexedMap (viewField model)
-                                        )
-                                    , div 
-                                        [ class "info-text" ]
-                                        [   
-                                            div ( if parametersNew.xSize == parameters.xSize then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
-                                                [ div [ class "mine-label" ] [ text "x size"]
-                                                , Input.number [ Input.value (String.fromInt parametersNew.xSize), Input.attrs [ class "mine-value" ], Input.onInput DoXsize ]
-                                                ]
-                                            , div ( if parametersNew.ySize == parameters.ySize then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
-                                                [ div [ class "mine-label" ] [ text "y size"]
-                                                , Input.number [ Input.value (String.fromInt parametersNew.ySize), Input.attrs [ class "mine-value" ], Input.onInput DoYsize ]
-                                                ]
-                                            , div ( if parametersNew.mines == parameters.mines then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
-                                                [ div [ class "mine-label" ] [ text "mines"]
-                                                , Input.number [ Input.value (String.fromInt parametersNew.mines), Input.attrs [ class "mine-value" ], Input.onInput DoMines ]
-                                                ]
-                                            , div [ class "buttons-container" ] 
-                                                [ button [ class "mine-button", ExtraMouse.onClick DoNew, disabled (errorMessage /= "") ] [ text "new" ]
-                                                ]
-                                            , div [ class "mine-input-message" ]
-                                                [ text errorMessage ]
-                                        ]
+                        [ div 
+                            [ class "info-text" ]
+                            [ 
+                                text ( String.fromInt openFields ++ "/" ++ String.fromInt ( xSize * ySize ) ++ " fields, " 
+                                    ++ String.fromInt mineFlags ++ "/" ++ String.fromInt mines ++ " mines" )
+                                , div [ class "buttons-container" ] 
+                                    [ button [ class "mine-button", ExtraMouse.onClick DoClear ] [ text "clear" ]
                                     ]
+                            ]
+                            , div 
+                                [ style "height" ( ( String.fromInt ( ySize * 30 ) ) ++ "px" )
+                                ]
+                                [ div 
+                                    [ class "mine-grid"
+                                    , style "grid-template-columns" ( "repeat(" ++ ( String.fromInt xSize ) ++ ", 30px )" ) 
+                                    , style "grid-template-rows" ( "repeat(" ++ ( String.fromInt ySize ) ++ ", 30px )" ) 
+                                    , style "display"       "grid"
+                                    , style "text-align"    "center"
+                                    ]
+                                    ( Array.toList model.fields
+                                    |> List.indexedMap (viewField model)
+                                    )
+                                ]
+                            , div 
+                                [ class "info-text" ]
+                                [   
+                                    div ( if parametersNew.xSize == parameters.xSize then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
+                                        [ div [ class "mine-label" ] [ text "x size"]
+                                        , Input.number [ Input.value (String.fromInt parametersNew.xSize), Input.attrs [ class "mine-value" ], Input.onInput DoXsize ]
+                                        ]
+                                    , div ( if parametersNew.ySize == parameters.ySize then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
+                                        [ div [ class "mine-label" ] [ text "y size"]
+                                        , Input.number [ Input.value (String.fromInt parametersNew.ySize), Input.attrs [ class "mine-value" ], Input.onInput DoYsize ]
+                                        ]
+                                    , div ( if parametersNew.mines == parameters.mines then [ class "mine-input" ] else [ class "mine-input", class "mine-input-new" ] )
+                                        [ div [ class "mine-label" ] [ text "mines"]
+                                        , Input.number [ Input.value (String.fromInt parametersNew.mines), Input.attrs [ class "mine-value" ], Input.onInput DoMines ]
+                                        ]
+                                    , div [ class "buttons-container" ] 
+                                        [ button [ class "mine-button", ExtraMouse.onClick DoNew, disabled (errorMessage /= "") ] [ text "new" ]
+                                        ]
+                                    , div [ class "mine-input-message" ]
+                                        [ text errorMessage ]
                                 ]
                         ]
                 ]
