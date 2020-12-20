@@ -6,14 +6,62 @@
 
     --color-field-empty: black;
 }
-div.info-text {
+
+div.main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100vh;
+}
+
+div.main > div.wrapper {
+    display: inline-block;
+}
+
+div.main > div.wrapper > div.top-info {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: small
+}
+
+div.main > div.wrapper > div.top-info > div.info-text {
     text-align: left;
+}
+
+div.main > div.wrapper > div.mine-grid {
+    display: grid;
+    text-align: center;
+}
+
+div.main > div.wrapper > div.bottom-info {
+    display: flex;
+    justify-content: space-between;
+    align-content: flex-start;
     font-family: 'Courier New', Courier, monospace;
     font-size: small;
 }
-div.buttons-container {
-    float: right;
+
+div.main > div.wrapper > div.bottom-info > div.mine-input {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
+
+div.main > div.wrapper > div.bottom-info > div.mine-input-new {
+    color: var(--color-background-field-mine);
+}
+
+div.main > div.wrapper > div.mine-input-message {
+    width: 100%;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: small;
+    float: left;
+    color: var(--color-background-field-mine);
+    font-weight: bold;
+}
+
 button.mine-button {
     width: 80px;
     height: 20px;
@@ -23,24 +71,6 @@ button.mine-button {
 }
 button.mine-button:hover{
     border-style: inset;
-}
-div.info-container{
-    position: absolute;
-    display: block;
-    
-    left: 50%;
-    top: 80px;   
-}
-div.minesweeper-container{
-    position: absolute;
-    display: block;
-    
-    left: 50%;
-    top: 100px;   
-}
-div.mine-grid {
-    display: grid;
-    text-align: center;
 }
 
 div.field {
@@ -72,12 +102,6 @@ div.field-flag {
     background-color: var(--color-background-field-flag);
 }
 
-div.mine-input {
-    float: left;
-}
-div.mine-input-new {
-    color: var(--color-background-field-mine);
-}
 
 div.mine-label {
     width: 50px;
@@ -93,11 +117,4 @@ input.mine-value {
     border-radius: 0rem;
     height: 20px;
     border: none;
-}
-div.mine-input-message {
-    width: 100%;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: small;
-    float: left;
-    color: var(--color-background-field-mine);
 }

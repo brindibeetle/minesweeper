@@ -6821,18 +6821,7 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$Attributes$style,
-						'width',
-						$elm$core$String$fromInt(xSize * 30) + 'px'),
-						A2(
-						$elm$html$Html$Attributes$style,
-						'margin-left',
-						$elm$core$String$fromInt(((xSize * 30) / (-2)) | 0) + 'px'),
-						A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
-						A2($elm$html$Html$Attributes$style, 'display', 'block'),
-						A2($elm$html$Html$Attributes$style, 'left', '50%'),
-						A2($elm$html$Html$Attributes$style, 'top', '100px')
+						$elm$html$Html$Attributes$class('main')
 					]),
 				_List_fromArray(
 					[
@@ -6840,20 +6829,29 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('info-text')
+								$elm$html$Html$Attributes$class('wrapper')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(
-								$elm$core$String$fromInt(openFields) + ('/' + ($elm$core$String$fromInt(xSize * ySize) + (' fields, ' + ($elm$core$String$fromInt(mineFlags) + ('/' + ($elm$core$String$fromInt(mines) + ' mines'))))))),
 								A2(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('buttons-container')
+										$elm$html$Html$Attributes$class('top-info')
 									]),
 								_List_fromArray(
 									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('info-text')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(
+												$elm$core$String$fromInt(openFields) + ('/' + ($elm$core$String$fromInt(xSize * ySize) + (' fields, ' + ($elm$core$String$fromInt(mineFlags) + ('/' + ($elm$core$String$fromInt(mines) + ' mines')))))))
+											])),
 										A2(
 										$elm$html$Html$button,
 										_List_fromArray(
@@ -6865,19 +6863,7 @@ var $author$project$Main$view = function (model) {
 											[
 												$elm$html$Html$text('clear')
 											]))
-									]))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$Attributes$style,
-								'height',
-								$elm$core$String$fromInt(ySize * 30) + 'px')
-							]),
-						_List_fromArray(
-							[
+									])),
 								A2(
 								$elm$html$Html$div,
 								_List_fromArray(
@@ -6890,136 +6876,125 @@ var $author$project$Main$view = function (model) {
 										A2(
 										$elm$html$Html$Attributes$style,
 										'grid-template-rows',
-										'repeat(' + ($elm$core$String$fromInt(ySize) + ', 30px )')),
-										A2($elm$html$Html$Attributes$style, 'display', 'grid'),
-										A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+										'repeat(' + ($elm$core$String$fromInt(ySize) + ', 30px )'))
 									]),
 								A2(
 									$elm$core$List$indexedMap,
 									$author$project$Main$viewField(model),
-									$elm$core$Array$toList(model.fields)))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('info-text')
-							]),
-						_List_fromArray(
-							[
+									$elm$core$Array$toList(model.fields))),
 								A2(
 								$elm$html$Html$div,
-								_Utils_eq(parametersNew.xSize, parameters.xSize) ? _List_fromArray(
+								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('mine-input')
-									]) : _List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('mine-input'),
-										$elm$html$Html$Attributes$class('mine-input-new')
+										$elm$html$Html$Attributes$class('bottom-info')
 									]),
 								_List_fromArray(
 									[
 										A2(
 										$elm$html$Html$div,
-										_List_fromArray(
+										_Utils_eq(parametersNew.xSize, parameters.xSize) ? _List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('mine-label')
+												$elm$html$Html$Attributes$class('mine-input')
+											]) : _List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mine-input'),
+												$elm$html$Html$Attributes$class('mine-input-new')
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('x size')
-											])),
-										$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
-										_List_fromArray(
-											[
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
-												$elm$core$String$fromInt(parametersNew.xSize)),
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+												A2(
+												$elm$html$Html$div,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$class('mine-value')
+														$elm$html$Html$Attributes$class('mine-label')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('x size')
 													])),
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoXsize)
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_Utils_eq(parametersNew.ySize, parameters.ySize) ? _List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('mine-input')
-									]) : _List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('mine-input'),
-										$elm$html$Html$Attributes$class('mine-input-new')
-									]),
-								_List_fromArray(
-									[
+												$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
+												_List_fromArray(
+													[
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
+														$elm$core$String$fromInt(parametersNew.xSize)),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-value')
+															])),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoXsize)
+													]))
+											])),
 										A2(
 										$elm$html$Html$div,
-										_List_fromArray(
+										_Utils_eq(parametersNew.ySize, parameters.ySize) ? _List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('mine-label')
+												$elm$html$Html$Attributes$class('mine-input')
+											]) : _List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mine-input'),
+												$elm$html$Html$Attributes$class('mine-input-new')
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('y size')
-											])),
-										$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
-										_List_fromArray(
-											[
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
-												$elm$core$String$fromInt(parametersNew.ySize)),
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+												A2(
+												$elm$html$Html$div,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$class('mine-value')
+														$elm$html$Html$Attributes$class('mine-label')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('y size')
 													])),
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoYsize)
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_Utils_eq(parametersNew.mines, parameters.mines) ? _List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('mine-input')
-									]) : _List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('mine-input'),
-										$elm$html$Html$Attributes$class('mine-input-new')
-									]),
-								_List_fromArray(
-									[
+												$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
+												_List_fromArray(
+													[
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
+														$elm$core$String$fromInt(parametersNew.ySize)),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-value')
+															])),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoYsize)
+													]))
+											])),
 										A2(
 										$elm$html$Html$div,
-										_List_fromArray(
+										_Utils_eq(parametersNew.mines, parameters.mines) ? _List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('mine-label')
+												$elm$html$Html$Attributes$class('mine-input')
+											]) : _List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mine-input'),
+												$elm$html$Html$Attributes$class('mine-input-new')
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('mines')
-											])),
-										$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
-										_List_fromArray(
-											[
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
-												$elm$core$String$fromInt(parametersNew.mines)),
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+												A2(
+												$elm$html$Html$div,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$class('mine-value')
+														$elm$html$Html$Attributes$class('mine-label')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('mines')
 													])),
-												$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoMines)
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('buttons-container')
-									]),
-								_List_fromArray(
-									[
+												$rundis$elm_bootstrap$Bootstrap$Form$Input$number(
+												_List_fromArray(
+													[
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$value(
+														$elm$core$String$fromInt(parametersNew.mines)),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$attrs(
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('mine-value')
+															])),
+														$rundis$elm_bootstrap$Bootstrap$Form$Input$onInput($author$project$Main$DoMines)
+													]))
+											])),
 										A2(
 										$elm$html$Html$button,
 										_List_fromArray(
