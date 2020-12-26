@@ -437,10 +437,10 @@ viewField { fields, parameters } index { status, content } =
                     div [ class "field field-empty" , ExtraMouse.onContextMenu DoNothing ] [ String.fromInt adjacentMines |> text ]
 
             ( Open, Mine ) ->
-                div [ class "field field-mine" , ExtraMouse.onContextMenu DoNothing ] [ img [ src "src/resources/mine.png", width 20, height 20  ] [] ]
+                div [ class "field field-mine" , ExtraMouse.onContextMenu DoNothing ] [ img [ src "images/mine.png", width 20, height 20  ] [] ]
 
             ( Flag, _ ) ->
-                div [ class "field field-flag", ExtraMouse.onContextMenu ( UnFlagField index ) ] [ img [ src "src/resources/flag1.png", width 20, height 20 ] [] ]
+                div [ class "field field-flag", ExtraMouse.onContextMenu ( UnFlagField index ) ] [ img [ src "images/flag1.png", width 20, height 20 ] [] ]
 
 
 -- UTILITY

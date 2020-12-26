@@ -8,6 +8,6 @@ stylesheet : Html msg
 stylesheet =
     node "link"
         [ rel "stylesheet"
-        , href "src/resources/minesweeper.css"
+        , href "styles/minesweeper.css"
         ]
         []

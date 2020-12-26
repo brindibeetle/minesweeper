@@ -1,1 +1,4 @@
-elm-stuff/
+/elm-stuff/
+/.idea/
+/target/
+/src/main/webapp/javascript/main.js
